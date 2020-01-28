@@ -1,65 +1,68 @@
-type: website
+app: website
+org: jessefarnham
+service: website
 
-components:
-    aircraftDb:
-        type: aws-dynamodb
-        inputs:
-            region: us-east-1
-            tables:
-                - name: aircraft
-                  hashKey: tailNumber
-                  indexes:
-                      - name: TailNumberIndex
-                        type: global
-                        hashKey: tailNumber
-                  schema:
-                      tailNumber: string
-                      isFlying: boolean
-                      lat: number
-                      long: number
-                  options:
-                      timestamps: true
+provider:
+    name: aws
+    runtime: nodejs12.x
+    environment:
+      aircraftTableName: aircraft
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan
+          - dynamodb:GetItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+          - dynamodb:DeleteItem
+        Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.aircraftTableName}"
+
+functions:
     updateFlightInfo:
-      type: aws-lambda
-      inputs:
         memory: 512
         timeout: 10
-        handler: flightinfo.update
-        root: ./code
-        env:
-          aircraftTableName: aircraft
-    getFlightInfo:
-      type: aws-lambda
-      inputs:
-        memory: 512
-        timeout: 10
-        handler: flightinfo.get
-        root: ./code
-        env:
-          aircraftTableName: aircraft
-    listFlightInfos:
-      type: aws-lambda
-      inputs:
-        memory: 512
-        timeout: 10
-        handler: flightinfo.list
-        root: ./code
-        env:
-          aircraftTableName: aircraft
-    flightInfoApi:
-      type: rest-api
-      inputs:
-        gateway: aws-apigateway
-        routes:
-          /flightinfo:
-            post:
-              function: ${updateFlightInfo}
-              cors: true
-            get:
-              function: ${listFlightInfos}
-              cors: true
-            /{tailnumber}:
-              get:
-                function: ${getFlightInfo}
+        handler: code/flightinfo.update
+        runtime: nodejs12.x
+        events:
+            - http:
+                path: flightinfo
+                method: post
                 cors: true
+    getFlightInfo:
+      memory: 512
+      timeout: 10
+      handler: code/flightinfo.get
+      runtime: nodejs12.x
+      events:
+        - http:
+            path: flightinfo/{tailnumber}
+            method: get
+            cors: true
+    listFlightInfos:
+      memory: 512
+      timeout: 10
+      handler: code/flightinfo.list
+      runtime: nodejs12.x
+      events:
+        - http:
+            path: flightinfo
+            method: get
+            cors: true
 
+resources:
+  Resources:
+    AircraftDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: tailNumber
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tailNumber
+            KeyType: HASH
+        TableName: ${self:provider.environment.aircraftTableName}
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1

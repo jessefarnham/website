@@ -1,4 +1,4 @@
-const aws = require('aws-sdk')
+const AWS = require('aws-sdk')
 const dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'})
 
 const tableName = process.env.aircraftTableName
@@ -64,7 +64,7 @@ function list(evt, ctx, cb) {
             else {
                 const flightInfos = data.Items
                 cb(null, {
-                    statusCodes: 200,
+                    statusCode: 200,
                     headers : {
                         'Content-Type': 'application/json',
                         'Access-Control-Allow-Origin': '*'
