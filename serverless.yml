@@ -1,0 +1,65 @@
+type: website
+
+components:
+    aircraftDb:
+        type: aws-dynamodb
+        inputs:
+            region: us-east-1
+            tables:
+                - name: aircraft
+                  hashKey: tailNumber
+                  indexes:
+                      - name: TailNumberIndex
+                        type: global
+                        hashKey: tailNumber
+                  schema:
+                      tailNumber: string
+                      isFlying: boolean
+                      lat: number
+                      long: number
+                  options:
+                      timestamps: true
+    updateFlightInfo:
+      type: aws-lambda
+      inputs:
+        memory: 512
+        timeout: 10
+        handler: flightinfo.update
+        root: ./code
+        env:
+          aircraftTableName: aircraft
+    getFlightInfo:
+      type: aws-lambda
+      inputs:
+        memory: 512
+        timeout: 10
+        handler: flightinfo.get
+        root: ./code
+        env:
+          aircraftTableName: aircraft
+    listFlightInfos:
+      type: aws-lambda
+      inputs:
+        memory: 512
+        timeout: 10
+        handler: flightinfo.list
+        root: ./code
+        env:
+          aircraftTableName: aircraft
+    flightInfoApi:
+      type: rest-api
+      inputs:
+        gateway: aws-apigateway
+        routes:
+          /flightinfo:
+            post:
+              function: ${updateFlightInfo}
+              cors: true
+            get:
+              function: ${listFlightInfos}
+              cors: true
+            /{tailnumber}:
+              get:
+                function: ${getFlightInfo}
+                cors: true
+
