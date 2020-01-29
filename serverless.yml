@@ -7,6 +7,8 @@ provider:
     runtime: nodejs12.x
     environment:
       aircraftTableName: aircraft
+      pollerTableName: pollerConfig
+      flightXml: amRvZ2cxMDEyOmRiZGYxY2U2MGIzZWJiOWQzNGE5ZmM4NjFkNTRkNWMxN2RhODY0NWU=
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -16,7 +18,9 @@ provider:
           - dynamodb:PutItem
           - dynamodb:UpdateItem
           - dynamodb:DeleteItem
-        Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.aircraftTableName}"
+        Resource:
+          - {"Fn::GetAtt": ['AircraftDbTable', 'Arn']}
+          - {"Fn::GetAtt": ['PollerDbTable', 'Arn']}
 
 functions:
     updateFlightInfo:
@@ -36,7 +40,7 @@ functions:
       runtime: nodejs12.x
       events:
         - http:
-            path: flightinfo/{tailnumber}
+            path: flightinfo/{tailNumber}
             method: get
             cors: true
     listFlightInfos:
@@ -48,6 +52,35 @@ functions:
         - http:
             path: flightinfo
             method: get
+            cors: true
+    poll:
+      memory: 512
+      timeout: 10
+      handler: code/flightinfo.poll
+      runtime: nodejs12.x
+      events:
+        - schedule:
+          rate: rate(1 minute)
+          enabled: true
+    setActiveTailNumber:
+      memory: 512
+      timeout: 10
+      handler: code/flightinfo.setActiveTailNumber
+      runtime: nodejs12.x
+      events:
+        - http:
+            path: flightinfo/active/{tailNumber}
+            method: put
+            cors: true
+    startPolling:
+      memory: 512
+      timeout: 10
+      handler: code/flightinfo.startPolling
+      runtime: nodejs12.x
+      events:
+        - http:
+            path: flightinfo/start
+            method: post
             cors: true
 
 resources:
@@ -63,6 +96,20 @@ resources:
           - AttributeName: tailNumber
             KeyType: HASH
         TableName: ${self:provider.environment.aircraftTableName}
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    PollerDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: configKey
+            AttributeType: S
+        KeySchema:
+          - AttributeName: configKey
+            KeyType: HASH
+        TableName: ${self:provider.environment.pollerTableName}
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
