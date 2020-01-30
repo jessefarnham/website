@@ -12,35 +12,31 @@ const configKey = 'pollerConfig'
 const numMissesKey = 'numMisses'
 const activeTailNumberKey = 'activeTailNumber'
 
-function update(evt, ctx, cb) {
-    let result = _update(JSON.parse(evt.body))
-    if (result.err){
-        cb(result.err)
-    }
-    else {
-        cb(null, {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify(result.resp)
-        })
+
+function respondHttp(cb) {
+    return function(err, resp) {
+        if (result.err){
+            cb(result.err)
+        }
+        else {
+            cb(null, {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify(result.resp)
+            })
+        }
     }
 }
 
-function _update(item) {
-    let _err = null
-    let _resp = null
+function update(evt, ctx, cb) {
     dynamo.put({
             Item: item,
             TableName: aircraftTableName},
-        (err, resp) => {
-            _err = err
-            _resp = resp
-        }
+            respondHttp(cb)
     )
-    return {err: _err, resp: _resp}
 }
 
 function get(evt, ctx, cb) {
@@ -52,47 +48,18 @@ function get(evt, ctx, cb) {
             },
             TableName: aircraftTableName
         },
-        (err, data) => {
-            if (err) {
-                cb(err)
-            }
-            else {
-                const flightInfo = data.Item
-                cb(null, {
-                    statusCode: 200,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    body: JSON.stringify(flightInfo)
-                })
-            }
-        }
+        respondHttp(cb)
     )
 }
 
 function list(evt, ctx, cb) {
     dynamo.scan(
         {TableName: aircraftTableName},
-        (err, data) => {
-            if (err) {
-                cb(err)
-            }
-            else {
-                const flightInfos = data.Items
-                cb(null, {
-                    statusCode: 200,
-                    headers : {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    body: JSON.stringify(flightInfos)
-                })
-            }
-        }
+        respondHttp(cb)
     )
 }
 
+// restructure as async
 function _updateWithFlightXml(activeTailNumber) {
     let flightXmlResult
     if (activeTailNumber === defaultTailNumber) {
@@ -103,11 +70,14 @@ function _updateWithFlightXml(activeTailNumber) {
     }
     console.log('Called mock flightXML, result=' + JSON.stringify(flightXmlResult))
     if (!flightXmlResult.err && flightXmlResult.lat && flightXmlResult.long) {
+        // call lambda
         _update({tailNumber: activeTailNumber, isFlying: true,
             lat: flightXmlResult.lat, long: flightXmlResult.long})
+        //make async
         _resetNumMisses()
     }
     else {
+        // make async
         _incrementNumMisses()
     }
     return flightXmlResult
@@ -174,6 +144,7 @@ function setActiveTailNumber(evt, ctx, cb) {
 }
 
 function startPolling(evt, ctx, cb) {
+    // make async
     let result = _resetNumMisses()
     if (result.err) {
         cb(result.err)
@@ -190,38 +161,25 @@ function startPolling(evt, ctx, cb) {
     }
 }
 
-function _resetNumMisses() {
+function _resetNumMisses(cb) {
     dynamo.update({
             Key: {configKey: configKey},
             UpdateExpression: `SET ${numMissesKey} = :n`,
             ExpressionAttributeValues: {':n': 0},
             TableName: pollerTableName},
-        (err, resp) => {
-            _err = err;
-            var _resp = resp
-        }
+        cb
     )
-    let result = {err: _err, resp: _resp}
-    console.log('Called resetNumMisses, result=' + JSON.stringify(result))
-    return result
 }
 
 
-function _incrementNumMisses() {
-    let _err = null
-    let _resp = null
+function _incrementNumMisses(cb) {
     dynamo.update({
             Key: {configKey: configKey},
             UpdateExpression: `SET ${numMissesKey} = ${numMissesKey} + :n`,
             ExpressionAttributeValues: {':n': 1},
             TableName: pollerTableName},
-        (err, resp) => {
-            _err = err
-            _resp = resp
-        }
+        cb
     )
-    let result =  {err: _err, resp: _resp}
-    console.log('Called incrementNumMisses, result=' + JSON.stringify(result))
 }
 
 function setConfig(evt, ctx, cb) {
@@ -230,21 +188,7 @@ function setConfig(evt, ctx, cb) {
     dynamo.put({
             Item: item,
             TableName: pollerTableName},
-        (err, resp) => {
-            if (err) {
-                cb(err)
-            }
-            else {
-                cb(null, {
-                    statusCode: 200,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    body: JSON.stringify(resp)
-                })
-            }
-        }
+        respondHttp(cb)
     )
 }
 
