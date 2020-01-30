@@ -8,7 +8,7 @@ const flightXml = process.env.flightXml
 const maxMisses = 5
 const defaultTailNumber = 'N76616'
 
-const configKey = pollerConfig
+const configKey = 'pollerConfig'
 const numMissesKey = 'numMisses'
 const activeTailNumberKey = 'activeTailNumber'
 
@@ -110,6 +110,7 @@ function _updateWithFlightXml(activeTailNumber) {
     else {
         _incrementNumMisses()
     }
+    return flightXmlResult
 }
 
 function poll(evt, ctx, cb) {
@@ -130,8 +131,8 @@ function poll(evt, ctx, cb) {
                 const prevNumMisses = data.Item[numMissesKey] || 0
                 if (prevNumMisses < maxMisses) {
                     const flightXmlUpdateResult = _updateWithFlightXml(activeTailNumber)
-                    console.log('poll(), flighXmlUpdateResult=' + JSON.stringify(flightXmlUpdateResult))
-                    if (flightXmlResult.err) {
+                    console.log('poll(), flightXmlUpdateResult=' + JSON.stringify(flightXmlUpdateResult))
+                    if (flightXmlUpdateResult.err) {
                         cb(err)
                     }
                     else {
@@ -150,8 +151,9 @@ function poll(evt, ctx, cb) {
 function setActiveTailNumber(evt, ctx, cb) {
     const tailNumber = evt.pathParameters.tailNumber
     dynamo.update({
-            Key: {configKey: activeTailNumberKey},
-            UpdateExpression: `SET ${activeTailNumberKey} = ${tailNumber}`,
+            Key: {configKey: configKey},
+            UpdateExpression: `SET ${activeTailNumberKey} = :t`,
+            ExpressionAttributeValues: {':t': tailNumber},
             TableName: pollerTableName},
         (err, resp) => {
             if (err) {
@@ -183,25 +185,25 @@ function startPolling(evt, ctx, cb) {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify(resp)
+            body: JSON.stringify(result.resp)
         })
     }
 }
 
 function _resetNumMisses() {
-    let _err = null
-    let _resp = null
     dynamo.update({
             Key: {configKey: configKey},
-            UpdateExpression: `SET ${numMissesKey} = 0`,
+            UpdateExpression: `SET ${numMissesKey} = :n`,
+            ExpressionAttributeValues: {':n': 0},
             TableName: pollerTableName},
         (err, resp) => {
-            _err = err
-            _resp = resp
+            _err = err;
+            var _resp = resp
         }
     )
-    return {err: _err, resp: _resp}
+    let result = {err: _err, resp: _resp}
     console.log('Called resetNumMisses, result=' + JSON.stringify(result))
+    return result
 }
 
 
@@ -210,7 +212,8 @@ function _incrementNumMisses() {
     let _resp = null
     dynamo.update({
             Key: {configKey: configKey},
-            UpdateExpression: `SET ${numMissesKey} = ${numMissesKey} + 1`,
+            UpdateExpression: `SET ${numMissesKey} = ${numMissesKey} + :n`,
+            ExpressionAttributeValues: {':n': 1},
             TableName: pollerTableName},
         (err, resp) => {
             _err = err
@@ -221,11 +224,36 @@ function _incrementNumMisses() {
     console.log('Called incrementNumMisses, result=' + JSON.stringify(result))
 }
 
+function setConfig(evt, ctx, cb) {
+    item = JSON.parse(evt.body)
+    item.configKey = configKey
+    dynamo.put({
+            Item: item,
+            TableName: pollerTableName},
+        (err, resp) => {
+            if (err) {
+                cb(err)
+            }
+            else {
+                cb(null, {
+                    statusCode: 200,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    body: JSON.stringify(resp)
+                })
+            }
+        }
+    )
+}
+
 module.exports = {
     update,
     get,
     list,
     poll,
     setActiveTailNumber,
-    startPolling
+    startPolling,
+    setConfig
 }

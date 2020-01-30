@@ -40,7 +40,7 @@ functions:
       runtime: nodejs12.x
       events:
         - http:
-            path: flightinfo/{tailNumber}
+            path: flightinfo/tailnumber/{tailNumber}
             method: get
             cors: true
     listFlightInfos:
@@ -59,9 +59,7 @@ functions:
       handler: code/flightinfo.poll
       runtime: nodejs12.x
       events:
-        - schedule:
-          rate: rate(1 minute)
-          enabled: true
+        - schedule: rate(1 minute)
     setActiveTailNumber:
       memory: 512
       timeout: 10
@@ -69,7 +67,7 @@ functions:
       runtime: nodejs12.x
       events:
         - http:
-            path: flightinfo/active/{tailNumber}
+            path: flightinfo/active/tailnumber/{tailNumber}
             method: put
             cors: true
     startPolling:
@@ -80,6 +78,16 @@ functions:
       events:
         - http:
             path: flightinfo/start
+            method: post
+            cors: true
+    setConfig:
+      memory: 512
+      timeout: 10
+      handler: code/flightinfo.setConfig
+      runtime: nodejs12.x
+      events:
+        - http:
+            path: flightinfo/config
             method: post
             cors: true
 
