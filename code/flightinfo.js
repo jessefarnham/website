@@ -15,8 +15,8 @@ const activeTailNumberKey = 'activeTailNumber'
 
 function respondHttp(cb) {
     return function(err, resp) {
-        if (result.err){
-            cb(result.err)
+        if (err){
+            cb(err)
         }
         else {
             cb(null, {
@@ -25,13 +25,19 @@ function respondHttp(cb) {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                body: JSON.stringify(result.resp)
+                body: JSON.stringify(resp)
             })
         }
     }
 }
 
 function update(evt, ctx, cb) {
+    let item = JSON.parse(evt.body)
+    _update(item, cb)
+}
+
+function _update(item, cb) {
+    console.log('update(), item=' + JSON.stringify(item))
     dynamo.put({
             Item: item,
             TableName: aircraftTableName},
@@ -59,8 +65,7 @@ function list(evt, ctx, cb) {
     )
 }
 
-// restructure as async
-function _updateWithFlightXml(activeTailNumber) {
+function _updateWithFlightXml(activeTailNumber, cb) {
     let flightXmlResult
     if (activeTailNumber === defaultTailNumber) {
         flightXmlResult =  {err: null, lat: 1.0, long: 2.0}
@@ -69,18 +74,30 @@ function _updateWithFlightXml(activeTailNumber) {
         flightXmlResult = {err: null, lat: null, long: null}
     }
     console.log('Called mock flightXML, result=' + JSON.stringify(flightXmlResult))
+    let payload
+    let numMissOperation
     if (!flightXmlResult.err && flightXmlResult.lat && flightXmlResult.long) {
-        // call lambda
-        _update({tailNumber: activeTailNumber, isFlying: true,
-            lat: flightXmlResult.lat, long: flightXmlResult.long})
-        //make async
-        _resetNumMisses()
+        console.log('Aircraft is flying')
+        payload = {tailNumber: activeTailNumber, isFlying: true,
+                   lat: flightXmlResult.lat, long: flightXmlResult.long}
+        numMissOperation = _resetNumMisses
     }
     else {
-        // make async
-        _incrementNumMisses()
+        console.log('Aircraft not flying or flightXmlError')
+        payload = {tailNumber: activeTailNumber, isFlying: false,
+            lat: null, long: null}
+        numMissOperation = _incrementNumMisses
     }
-    return flightXmlResult
+    let callback = function(err, updateResp) {
+        if (err){
+            _incrementNumMisses(cb)
+            cb(err)
+        }
+        else {
+            numMissOperation(cb)
+        }
+    }
+    _update(payload, callback)
 }
 
 function poll(evt, ctx, cb) {
@@ -100,14 +117,8 @@ function poll(evt, ctx, cb) {
                 const activeTailNumber = data.Item[activeTailNumberKey] || 'N76616'
                 const prevNumMisses = data.Item[numMissesKey] || 0
                 if (prevNumMisses < maxMisses) {
-                    const flightXmlUpdateResult = _updateWithFlightXml(activeTailNumber)
-                    console.log('poll(), flightXmlUpdateResult=' + JSON.stringify(flightXmlUpdateResult))
-                    if (flightXmlUpdateResult.err) {
-                        cb(err)
-                    }
-                    else {
-                        cb(null, flightXmlUpdateResult)
-                    }
+                    console.log('poll(), calling updateWithFlightXml')
+                    _updateWithFlightXml(activeTailNumber, cb)
                 }
                 else {
                     console.log('poll(), no-op')
@@ -144,24 +155,12 @@ function setActiveTailNumber(evt, ctx, cb) {
 }
 
 function startPolling(evt, ctx, cb) {
-    // make async
-    let result = _resetNumMisses()
-    if (result.err) {
-        cb(result.err)
-    }
-    else {
-        cb(null, {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify(result.resp)
-        })
-    }
+    console.log('startPolling')
+    _resetNumMisses(cb)
 }
 
 function _resetNumMisses(cb) {
+    console.log('resetNumMisses()')
     dynamo.update({
             Key: {configKey: configKey},
             UpdateExpression: `SET ${numMissesKey} = :n`,
@@ -173,6 +172,7 @@ function _resetNumMisses(cb) {
 
 
 function _incrementNumMisses(cb) {
+    console.log('incrementNumMisses()')
     dynamo.update({
             Key: {configKey: configKey},
             UpdateExpression: `SET ${numMissesKey} = ${numMissesKey} + :n`,
@@ -183,7 +183,7 @@ function _incrementNumMisses(cb) {
 }
 
 function setConfig(evt, ctx, cb) {
-    item = JSON.parse(evt.body)
+    let item = JSON.parse(evt.body)
     item.configKey = configKey
     dynamo.put({
             Item: item,
@@ -201,3 +201,4 @@ module.exports = {
     startPolling,
     setConfig
 }
+
