@@ -1,5 +1,6 @@
 import React, { useState, useEffect} from "react";
 import { API } from 'aws-amplify'
+import Map from '../components/Map';
 import './FlightStatus.css';
 
 export default function FlightStatus() {
@@ -43,6 +44,9 @@ export default function FlightStatus() {
                 <p>
                     {!isLoading && renderFlightInfo(status)}
                 </p>
+            </div>
+            <div className={'map'}>
+                <Map/>
             </div>
         </div>
     )
