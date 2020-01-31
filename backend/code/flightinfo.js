@@ -13,19 +13,20 @@ const numMissesKey = 'numMisses'
 const activeTailNumberKey = 'activeTailNumber'
 
 
-function respondHttp(cb) {
+function respondHttp(cb, extractor) {
     return function(err, resp) {
         if (err){
             cb(err)
         }
         else {
+            let _extractor = extractor || function(resp) {return resp};
             cb(null, {
                 statusCode: 200,
                 headers: {
                     'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                body: JSON.stringify(resp)
+                body: JSON.stringify(_extractor(resp))
             })
         }
     }
@@ -136,21 +137,20 @@ function setActiveTailNumber(evt, ctx, cb) {
             UpdateExpression: `SET ${activeTailNumberKey} = :t`,
             ExpressionAttributeValues: {':t': tailNumber},
             TableName: pollerTableName},
-        (err, resp) => {
-            if (err) {
-                cb(err)
-            }
-            else {
-                cb(null, {
-                    statusCode: 200,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    },
-                    body: JSON.stringify(resp)
-                })
-            }
-        }
+        respondHttp(cb)
+    )
+}
+
+function getActiveTailNumber(evt, ctx, cb) {
+    dynamo.get(
+        {
+            Key: {
+                configKey: configKey
+            },
+            TableName: pollerTableName
+        },
+        respondHttp(cb,
+            function(resp) {return {tailNumber: resp.Item.activeTailNumber}})
     )
 }
 
@@ -197,6 +197,7 @@ module.exports = {
     get,
     list,
     poll,
+    getActiveTailNumber,
     setActiveTailNumber,
     startPolling,
     setConfig
