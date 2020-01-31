@@ -47,7 +47,11 @@ function _update(item, cb) {
 }
 
 function get(evt, ctx, cb) {
-    const tailNumber = evt.pathParameters.tailNumber
+    const tailNumber = evt.pathParameters.tailNumber;
+    _get(tailNumber, cb)
+}
+
+function _get(tailNumber, cb) {
     dynamo.get(
         {
             Key: {
@@ -55,7 +59,7 @@ function get(evt, ctx, cb) {
             },
             TableName: aircraftTableName
         },
-        respondHttp(cb)
+        respondHttp(cb, function(resp) {return resp.Item})
     )
 }
 
@@ -115,7 +119,7 @@ function poll(evt, ctx, cb) {
             }
             else {
                 console.log('poll(), current config settings=' + JSON.stringify(data.Item))
-                const activeTailNumber = data.Item[activeTailNumberKey] || 'N76616'
+                const activeTailNumber = data.Item[activeTailNumberKey] || defaultTailNumber
                 const prevNumMisses = data.Item[numMissesKey] || 0
                 if (prevNumMisses < maxMisses) {
                     console.log('poll(), calling updateWithFlightXml')
@@ -141,7 +145,7 @@ function setActiveTailNumber(evt, ctx, cb) {
     )
 }
 
-function getActiveTailNumber(evt, ctx, cb) {
+function getActiveFlightInfo(evt, ctx, cb) {
     dynamo.get(
         {
             Key: {
@@ -149,8 +153,14 @@ function getActiveTailNumber(evt, ctx, cb) {
             },
             TableName: pollerTableName
         },
-        respondHttp(cb,
-            function(resp) {return {tailNumber: resp.Item.activeTailNumber}})
+        function (err, resp) {
+            if (err) {
+                cb(err)
+            }
+            else {
+                _get(resp.Item.activeTailNumber || defaultTailNumber, cb)
+            }
+        }
     )
 }
 
@@ -197,7 +207,7 @@ module.exports = {
     get,
     list,
     poll,
-    getActiveTailNumber,
+    getActiveFlightInfo,
     setActiveTailNumber,
     startPolling,
     setConfig

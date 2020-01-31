@@ -70,10 +70,10 @@ functions:
             path: flightinfo/active/tailnumber/{tailNumber}
             method: put
             cors: true
-    getActiveTailNumber:
+    getActiveFlightInfo:
       memory: 512
       timeout: 10
-      handler: code/flightinfo.getActiveTailNumber
+      handler: code/flightinfo.getActiveFlightInfo
       events:
         - http:
             path: flightinfo/active
