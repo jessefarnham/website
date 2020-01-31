@@ -8,11 +8,9 @@ function App(props) {
   return (
     <div className="App Container">
         <Navbar fluid collapseOnSelect>
-          <Navbar.Header>
             <Navbar.Brand>
               <Link to='/'>Scratch</Link>
             </Navbar.Brand>
-          </Navbar.Header>
         </Navbar>
         <Routes />
     </div>
