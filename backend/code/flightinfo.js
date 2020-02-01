@@ -1,17 +1,78 @@
-const AWS = require('aws-sdk')
-const dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'})
+const AWS = require('aws-sdk');
+const dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
 
-const aircraftTableName = process.env.aircraftTableName
-const pollerTableName = process.env.pollerTableName
-const flightXml = process.env.flightXml
+const aircraftTableName = process.env.aircraftTableName;
+const pollerTableName = process.env.pollerTableName;
+const flightXml = process.env.flightXml;
+const flightXmlUrl = 'http://flightxml.flightaware.com/json/FlightXML2/InFlightInfo?ident=N76616';
 
-const maxMisses = 5
-const defaultTailNumber = 'N76616'
+const maxMisses = 5;
+const defaultTailNumber = 'N76616';
 
-const configKey = 'pollerConfig'
-const numMissesKey = 'numMisses'
-const activeTailNumberKey = 'activeTailNumber'
+const configKey = 'pollerConfig';
+const numMissesKey = 'numMisses';
+const activeTailNumberKey = 'activeTailNumber';
+const useMockFlightXmlKey = 'useMockFlightXml';
 
+const mockData = {
+    "InFlightInfoResult": {
+        "faFlightID": "N313EZ-1580587719-1-0-246",
+        "ident": "N76616",
+        "prefix": "",
+        "type": "SR22",
+        "suffix": "",
+        "origin": "KOYM",
+        "destination": "KPTK",
+        "timeout": "ok",
+        "timestamp": 1580591691,
+        "departureTime": 1580589965,
+        "firstPositionTime": 1580589965,
+        "arrivalTime": 0,
+        "longitude": -80.14283,
+        "latitude": 41.85242,
+        "lowLongitude": -80.14283,
+        "lowLatitude": 41.43070,
+        "highLongitude": -78.56010,
+        "highLatitude": 41.85242,
+        "groundspeed": 150,
+        "altitude": 61,
+        "heading": 290,
+        "altitudeStatus": "",
+        "updateType": "TA",
+        "altitudeChange": "C",
+        "waypoints": "41.41 -78.5 41.44 -78.6 41.44 -78.61 41.66 -79.39 41.69 -79.52 41.75 -79.77 41.76 -79.8 41.76 -79.82 41.84 -80.08 42.11 -81.13 42.29 -81.86 42.41 -82.33 42.45 -82.52 42.58 -83.03 42.6 -83.12 42.6 -83.13 42.61 -83.19 42.63 -83.27 42.66 -83.38 42.67 -83.42"
+    }
+};
+
+const emptyMockData = {
+    "InFlightInfoResult": {
+        "faFlightID": "",
+        "ident": "N76616",
+        "prefix": "",
+        "type": "",
+        "suffix": "",
+        "origin": "",
+        "destination": "",
+        "timeout": "",
+        "timestamp": 0,
+        "departureTime": 0,
+        "firstPositionTime": 0,
+        "arrivalTime": 0,
+        "longitude": 0,
+        "latitude": 0,
+        "lowLongitude": 0,
+        "lowLatitude": 0,
+        "highLongitude": 0,
+        "highLatitude": 0,
+        "groundspeed": 0,
+        "altitude": 0,
+        "heading": 0,
+        "altitudeStatus": "",
+        "updateType": "",
+        "altitudeChange": "",
+        "waypoints": ""
+    }
+};
 
 function respondHttp(cb, extractor) {
     return function(err, resp) {
@@ -70,27 +131,35 @@ function list(evt, ctx, cb) {
     )
 }
 
-function _updateWithFlightXml(activeTailNumber, cb) {
-    let flightXmlResult
-    if (activeTailNumber === defaultTailNumber) {
-        flightXmlResult =  {err: null, lat: 1.0, long: 2.0}
+function _updateWithFlightXml(activeTailNumber, useMock, cb) {
+    let flightXmlResult;
+    if (useMock) {
+        if (activeTailNumber === defaultTailNumber) {
+            flightXmlResult = mockData
+        } else {
+            flightXmlResult = emptyMockData
+        }
+        console.log('Called mock flightXML, result=' + JSON.stringify(flightXmlResult));
+        postFlightXmlCallback(flightXmlResult.InFlightInfoResult, activeTailNumber);
     }
     else {
-        flightXmlResult = {err: null, lat: null, long: null}
+
     }
-    console.log('Called mock flightXML, result=' + JSON.stringify(flightXmlResult))
-    let payload
-    let numMissOperation
-    if (!flightXmlResult.err && flightXmlResult.lat && flightXmlResult.long) {
-        console.log('Aircraft is flying')
-        payload = {tailNumber: activeTailNumber, isFlying: true,
-                   lat: flightXmlResult.lat, long: flightXmlResult.long}
+}
+
+function postFlightXmlCallback(flightXmlResult, activeTailNumber) {
+    let payload;
+    let numMissOperation;
+    if (flightXmlResult.latitude && flightXmlResult.longitude) {
+        console.log('Aircraft is flying');
+        payload = {tailNumber: flightXmlResult.ident, isFlying: true,
+                   lat: flightXmlResult.latitude, long: flightXmlResult.longitude}
         numMissOperation = _resetNumMisses
     }
     else {
-        console.log('Aircraft not flying or flightXmlError')
+        console.log('Aircraft not flying')
         payload = {tailNumber: activeTailNumber, isFlying: false,
-            lat: null, long: null}
+            lat: null, long: null};
         numMissOperation = _incrementNumMisses
     }
     let callback = function(err, updateResp) {
@@ -101,7 +170,7 @@ function _updateWithFlightXml(activeTailNumber, cb) {
         else {
             numMissOperation(cb)
         }
-    }
+    };
     _update(payload, callback)
 }
 
@@ -122,8 +191,8 @@ function poll(evt, ctx, cb) {
                 const activeTailNumber = data.Item[activeTailNumberKey] || defaultTailNumber
                 const prevNumMisses = data.Item[numMissesKey] || 0
                 if (prevNumMisses < maxMisses) {
-                    console.log('poll(), calling updateWithFlightXml')
-                    _updateWithFlightXml(activeTailNumber, cb)
+                    console.log('poll(), calling updateWithFlightXml');
+                    _updateWithFlightXml(activeTailNumber, data.Item[useMockFlightXmlKey], cb)
                 }
                 else {
                     console.log('poll(), no-op')
