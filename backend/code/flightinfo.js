@@ -140,14 +140,14 @@ function _updateWithFlightXml(activeTailNumber, useMock, cb) {
             flightXmlResult = emptyMockData
         }
         console.log('Called mock flightXML, result=' + JSON.stringify(flightXmlResult));
-        postFlightXmlCallback(flightXmlResult.InFlightInfoResult, activeTailNumber);
+        postFlightXmlCallback(flightXmlResult.InFlightInfoResult, activeTailNumber, cb);
     }
     else {
 
     }
 }
 
-function postFlightXmlCallback(flightXmlResult, activeTailNumber) {
+function postFlightXmlCallback(flightXmlResult, activeTailNumber, cb) {
     let payload;
     let numMissOperation;
     if (flightXmlResult.latitude && flightXmlResult.longitude) {
@@ -164,11 +164,11 @@ function postFlightXmlCallback(flightXmlResult, activeTailNumber) {
     }
     let callback = function(err, updateResp) {
         if (err){
-            _incrementNumMisses(cb)
+            _incrementNumMisses(cb);
             cb(err)
         }
         else {
-            numMissOperation(cb)
+            numMissOperation(cb);
         }
     };
     _update(payload, callback)
