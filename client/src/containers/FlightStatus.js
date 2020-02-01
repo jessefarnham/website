@@ -1,59 +1,65 @@
-import React, { useState, useEffect} from "react";
+import React, { Component } from "react";
 import { API } from 'aws-amplify'
 import MapContainer from '../components/Map';
 import './FlightStatus.css';
 
-export default function FlightStatus() {
-    const [status, setStatus] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+const updateIntervalSeconds = 60;
 
-    useEffect(() => {
-        async function onLoad() {
-            try {
-                const status = await loadStatus();
-                setStatus(status)
-            }
-            catch (e) {
-                alert(e);
-            }
-            setIsLoading(false);
-        }
+export default class FlightStatus extends Component {
 
-        onLoad();
-    }, []);
-
-    function loadStatus() {
-        return API.get('flight-info', '/flightinfo/active');
+    constructor(props) {
+        super(props);
+        this.state = {time: null, flightStatus: null};
+        this.loadStatus = this.loadStatus.bind(this);
+        this.loadStatus()
     }
 
-    function renderFlightInfo(flightInfo) {
+    async loadStatus() {
+        let flightStatus =  await API.get('flight-info', '/flightinfo/active');
+        this.setState({time: new Date(), flightStatus: flightStatus})
+    }
+
+    componentWillMount
+
+    componentDidMount(){
+        this.interval = setInterval(this.loadStatus, updateIntervalSeconds * 1000)
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval);
+    }
+
+    renderFlightInfo() {
         return (
             <dl>
-                <dt>Tail number</dt><dd>{flightInfo.tailNumber}</dd>
-                <dt>Is flying</dt><dd>{JSON.stringify(flightInfo.isFlying)}</dd>
-                <dt>Latitude</dt><dd>{flightInfo.lat}</dd>
-                <dt>Longitude</dt><dd>{flightInfo.long}</dd>
+                <dt>Tail number</dt><dd>{this.state.flightStatus.tailNumber}</dd>
+                <dt>Is flying</dt><dd>{JSON.stringify(this.state.flightStatus.isFlying)}</dd>
+                <dt>Latitude</dt><dd>{this.state.flightStatus.lat}</dd>
+                <dt>Longitude</dt><dd>{this.state.flightStatus.long}</dd>
+                <dt>Last update</dt><dd>{this.state.time.toLocaleTimeString()}</dd>
             </dl>
         )
     }
 
-    function renderMap(flightInfo) {
+    renderMap() {
         return (
-            <MapContainer flightInfo={flightInfo} />
+            <MapContainer flightInfo={this.state.flightStatus} />
         )
     }
 
-    return (
-        <div className='FlightStatus'>
-            <div className='lander'>
-                <h1>Flight Status</h1>
-                <p>
-                    {!isLoading && renderFlightInfo(status)}
-                </p>
+    render() {
+        return (
+            <div className='FlightStatus'>
+                <div className='lander'>
+                    <h1>Flight Status</h1>
+                    <p>
+                        {this.state.time && this.renderFlightInfo()}
+                    </p>
+                </div>
+                <div className={'map'}>
+                    {this.state.time && this.renderMap()}
+                </div>
             </div>
-            <div className={'map'}>
-                {!isLoading && renderMap(status)}
-            </div>
-        </div>
-    )
+        )
+    }
 }
