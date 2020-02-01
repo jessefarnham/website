@@ -19,8 +19,6 @@ export default class FlightStatus extends Component {
         this.setState({time: new Date(), flightStatus: flightStatus})
     }
 
-    componentWillMount
-
     componentDidMount(){
         this.interval = setInterval(this.loadStatus, updateIntervalSeconds * 1000)
     }
