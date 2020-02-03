@@ -19,12 +19,22 @@ class MapContainer extends Component {
         return(
             <Map
                 google={this.props.google}
-                zoom={14}
+                zoom={10}
                 style={mapStyles}
                 initialCenter={loc}
                 center={loc}
             >
-                <Marker position={loc} />
+                <Marker
+                    position={loc}
+                    icon={{
+                        path: this.props.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                        rotation: this.props.flightInfo.heading,
+                        scale: 5,
+                        fillColor: 'red',
+                        fillOpacity: 2,
+                        strokeWeight: 2
+                    }}
+                />
             </Map>
         );
     }

@@ -32,6 +32,9 @@ export default class FlightStatus extends Component {
             <dl>
                 <dt>Tail number</dt><dd>{this.state.flightStatus.tailNumber}</dd>
                 <dt>Is flying</dt><dd>{JSON.stringify(this.state.flightStatus.isFlying)}</dd>
+                <dt>Altitude</dt><dd>{JSON.stringify(this.state.flightStatus.altitude * 100)}</dd>
+                <dt>Groundspeed</dt><dd>{JSON.stringify(this.state.flightStatus.groundspeed)}</dd>
+                <dt>Heading</dt><dd>{JSON.stringify(this.state.flightStatus.heading)}</dd>
                 <dt>Latitude</dt><dd>{this.state.flightStatus.lat}</dd>
                 <dt>Longitude</dt><dd>{this.state.flightStatus.long}</dd>
                 <dt>Last update</dt><dd>{this.state.time.toLocaleTimeString()}</dd>

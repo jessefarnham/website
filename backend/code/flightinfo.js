@@ -179,8 +179,13 @@ function postFlightXmlCallback(flightXmlResult, activeTailNumber, cb) {
     let numMissOperation;
     if (flightXmlResult.latitude && flightXmlResult.longitude) {
         console.log('Aircraft is flying');
-        payload = {tailNumber: flightXmlResult.ident, isFlying: true,
-                   lat: flightXmlResult.latitude, long: flightXmlResult.longitude}
+        payload = {
+            tailNumber: flightXmlResult.ident, isFlying: true,
+            lat: flightXmlResult.latitude, long: flightXmlResult.longitude,
+            altitude: flightXmlResult.altitude,
+            heading: flightXmlResult.heading,
+            groundspeed: flightXmlResult.groundspeed
+        };
         numMissOperation = _resetNumMisses
     }
     else {

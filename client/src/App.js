@@ -10,7 +10,7 @@ function App(props) {
     <div className="App Container">
         <Navbar fluid collapseOnSelect>
             <Navbar.Brand>
-              <Link to='/'>Scratch</Link>
+              <Link to='/'>Home</Link>
             </Navbar.Brand>
             <Navbar.Toggle />
             <Navbar.Collapse>
