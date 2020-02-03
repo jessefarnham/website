@@ -1,4 +1,5 @@
 const AWS = require('aws-sdk');
+const http = require('http');
 const dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
 
 const aircraftTableName = process.env.aircraftTableName;
@@ -13,6 +14,7 @@ const configKey = 'pollerConfig';
 const numMissesKey = 'numMisses';
 const activeTailNumberKey = 'activeTailNumber';
 const useMockFlightXmlKey = 'useMockFlightXml';
+
 
 const mockData = {
     "InFlightInfoResult": {
@@ -143,7 +145,33 @@ function _updateWithFlightXml(activeTailNumber, useMock, cb) {
         postFlightXmlCallback(flightXmlResult.InFlightInfoResult, activeTailNumber, cb);
     }
     else {
-
+        const params = {
+            host: 'flightxml.flightaware.com',
+            path: '/json/FlightXML2/InFlightInfo?ident=' + activeTailNumber,
+            method: 'GET',
+            headers: {
+                Authorization: 'Basic ' + flightXml
+            }
+        };
+        let req = http.request(params, function(result) {
+            let data = '';
+            console.log('FlightXml status=' + result.statusCode);
+            if (result.statusCode !== 200) {
+                _incrementNumMisses(cb);
+            }
+            else {
+                result.setEncoding('utf8');
+                result.on('data', function (chunk) {
+                    data += chunk;
+                });
+                result.on('end', function () {
+                    console.log('Got data from FlightXml');
+                    let flightXmlResult = JSON.parse(data);
+                    postFlightXmlCallback(flightXmlResult.InFlightInfoResult, activeTailNumber, cb)
+                })
+            }
+        });
+        req.end();
     }
 }
 
@@ -157,7 +185,7 @@ function postFlightXmlCallback(flightXmlResult, activeTailNumber, cb) {
         numMissOperation = _resetNumMisses
     }
     else {
-        console.log('Aircraft not flying')
+        console.log('Aircraft not flying');
         payload = {tailNumber: activeTailNumber, isFlying: false,
             lat: null, long: null};
         numMissOperation = _incrementNumMisses
