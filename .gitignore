@@ -17,3 +17,5 @@ package-lock.json
 state.json
 
 .serverless/
+
+auth.js

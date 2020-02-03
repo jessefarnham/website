@@ -8,7 +8,6 @@ provider:
     environment:
       aircraftTableName: aircraft
       pollerTableName: pollerConfig
-      flightXml: amRvZ2cxMDEyOmRiZGYxY2U2MGIzZWJiOWQzNGE5ZmM4NjFkNTRkNWMxN2RhODY0NWU=
     iamRoleStatements:
       - Effect: Allow
         Action:

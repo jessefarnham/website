@@ -1,11 +1,10 @@
+import Auth from 'auth'
 const AWS = require('aws-sdk');
-const http = require('http');
+const https = require('https');
 const dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
 
 const aircraftTableName = process.env.aircraftTableName;
 const pollerTableName = process.env.pollerTableName;
-const flightXml = process.env.flightXml;
-const flightXmlUrl = 'http://flightxml.flightaware.com/json/FlightXML2/InFlightInfo?ident=N76616';
 
 const maxMisses = 5;
 const defaultTailNumber = 'N76616';
@@ -150,10 +149,10 @@ function _updateWithFlightXml(activeTailNumber, useMock, cb) {
             path: '/json/FlightXML2/InFlightInfo?ident=' + activeTailNumber,
             method: 'GET',
             headers: {
-                Authorization: 'Basic ' + flightXml
+                Authorization: 'Basic ' + Auth.flightXml
             }
         };
-        let req = http.request(params, function(result) {
+        let req = https.request(params, function(result) {
             let data = '';
             console.log('FlightXml status=' + result.statusCode);
             if (result.statusCode !== 200) {
