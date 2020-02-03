@@ -1,4 +1,4 @@
-import Auth from 'auth'
+require('./auth');
 const AWS = require('aws-sdk');
 const https = require('https');
 const dynamo = new AWS.DynamoDB.DocumentClient({region: 'us-east-1'});
