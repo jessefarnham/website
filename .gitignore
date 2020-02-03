@@ -19,3 +19,4 @@ state.json
 .serverless/
 
 auth.js
+auth.yml

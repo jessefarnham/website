@@ -2,12 +2,16 @@ app: website
 org: jessefarnham
 service: website
 
+custom:
+  auth: ${file(./auth.yml)}
+
 provider:
     name: aws
     runtime: nodejs12.x
     environment:
       aircraftTableName: aircraft
       pollerTableName: pollerConfig
+      flightXmlAuth: ${self:custom.auth.flightXmlAuth}
     iamRoleStatements:
       - Effect: Allow
         Action:
