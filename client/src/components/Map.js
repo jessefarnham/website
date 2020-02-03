@@ -3,8 +3,10 @@ import { Map, GoogleApiWrapper, Marker } from 'google-maps-react';
 import Auth from '../auth';
 
 const mapStyles = {
-    width: '100%',
-    height: '100%'
+    width: '75%',
+    height: '75%',
+    "margin-left": 'auto',
+    "margin-right": 'auto'
 };
 
 class MapContainer extends Component {
@@ -20,6 +22,7 @@ class MapContainer extends Component {
                 zoom={14}
                 style={mapStyles}
                 initialCenter={loc}
+                center={loc}
             >
                 <Marker position={loc} />
             </Map>

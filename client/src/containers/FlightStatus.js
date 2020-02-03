@@ -55,7 +55,7 @@ export default class FlightStatus extends Component {
                     </p>
                 </div>
                 <div className={'map'}>
-                    {this.state.time && this.renderMap()}
+                    {this.state.time && this.state.flightStatus.isFlying && this.renderMap()}
                 </div>
             </div>
         )
