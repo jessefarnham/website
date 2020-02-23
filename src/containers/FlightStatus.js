@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { API } from 'aws-amplify'
 import MapContainer from '../components/Map';
 import './FlightStatus.css';
+import Config from '../config';
+import AirplaneInHangar from './airplaneInHangar.png';
 
 const updateIntervalSeconds = 60;
 
@@ -28,18 +30,47 @@ export default class FlightStatus extends Component {
     }
 
     renderFlightInfo() {
-        return (
-            <dl>
-                <dt>Tail number</dt><dd>{this.state.flightStatus.tailNumber}</dd>
-                <dt>Is flying</dt><dd>{JSON.stringify(this.state.flightStatus.isFlying)}</dd>
-                <dt>Altitude</dt><dd>{JSON.stringify(this.state.flightStatus.altitude * 100)}</dd>
-                <dt>Groundspeed</dt><dd>{JSON.stringify(this.state.flightStatus.groundspeed)}</dd>
-                <dt>Heading</dt><dd>{JSON.stringify(this.state.flightStatus.heading)}</dd>
-                <dt>Latitude</dt><dd>{this.state.flightStatus.lat}</dd>
-                <dt>Longitude</dt><dd>{this.state.flightStatus.long}</dd>
-                <dt>Last update</dt><dd>{this.state.time.toLocaleTimeString()}</dd>
-            </dl>
-        )
+        let name;
+        if (this.state.flightStatus.tailNumber === Config.jesseTailNumber) {
+            name = "Jesse";
+        }
+        else {
+            name = this.state.flightStatus.tailNumber;
+        }
+        if (this.state.flightStatus.isFlying) {
+            return (
+                <div>
+                    <p>{name} is flying!</p>
+                    <dl>
+                        <dt>Tail number</dt>
+                        <dd>{this.state.flightStatus.tailNumber}</dd>
+                        <dt>Is flying</dt>
+                        <dd>{JSON.stringify(this.state.flightStatus.isFlying)}</dd>
+                        <dt>Altitude</dt>
+                        <dd>{JSON.stringify(this.state.flightStatus.altitude * 100)}</dd>
+                        <dt>Groundspeed</dt>
+                        <dd>{JSON.stringify(this.state.flightStatus.groundspeed)}</dd>
+                        <dt>Heading</dt>
+                        <dd>{JSON.stringify(this.state.flightStatus.heading)}</dd>
+                        <dt>Latitude</dt>
+                        <dd>{this.state.flightStatus.lat}</dd>
+                        <dt>Longitude</dt>
+                        <dd>{this.state.flightStatus.long}</dd>
+                        <dt>Last update</dt>
+                        <dd>{this.state.time.toLocaleTimeString()}</dd>
+                    </dl>
+                </div>
+            )
+        }
+        else {
+            return (
+                <div>
+                    <p>{name} is not flying right now. Come back later!</p>
+                    <img src={AirplaneInHangar} alt={"Jesse's airplane in its hangar"} />
+                </div>
+
+            )
+        }
     }
 
     renderMap() {
