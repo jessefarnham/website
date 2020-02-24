@@ -66,7 +66,7 @@ export default class FlightStatus extends Component {
             return (
                 <div>
                     <p>{name} is not flying right now. Come back later!</p>
-                    <img src={FireflyInPA} class={'img-responsive'} alt={"Jesse's airplane on the ground"} />
+                    <img src={FireflyInPA} class={'img-fluid'} alt={"Jesse's airplane on the ground"} />
                 </div>
 
             )
