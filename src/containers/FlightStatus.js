@@ -37,10 +37,13 @@ export default class FlightStatus extends Component {
         else {
             name = this.state.flightStatus.tailNumber;
         }
+        let flightAwareUrl = 'https://www.flightaware.com/live/flight/' + this.state.flightStatus.tailNumber
         if (this.state.flightStatus.isFlying) {
             return (
                 <div>
                     <p>{name} is flying!</p>
+                    <p>This flight may be visible {" "} <a href={flightAwareUrl}>on FlightAware</a>,
+                    which updates more quickly than this website.</p>
                     <dl>
                         <dt>Tail number</dt>
                         <dd>{this.state.flightStatus.tailNumber}</dd>
@@ -66,6 +69,9 @@ export default class FlightStatus extends Component {
             return (
                 <div>
                     <p>{name} is not flying right now. Come back later!</p>
+
+                    <p>Information from recent flights may be visible {" "}
+                        <a href={flightAwareUrl}>on FlightAware.</a></p>
                     <img src={FireflyInPA} class={'img-fluid'} alt={"Jesse's airplane on the ground"} />
                 </div>
 
