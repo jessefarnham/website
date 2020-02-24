@@ -3,7 +3,7 @@ import { API } from 'aws-amplify'
 import MapContainer from '../components/Map';
 import './FlightStatus.css';
 import Config from '../config';
-import AirplaneInHangar from './airplaneInHangar.png';
+import FireflyInPA from './fireflyInPA.jpg';
 
 const updateIntervalSeconds = 60;
 
@@ -66,7 +66,7 @@ export default class FlightStatus extends Component {
             return (
                 <div>
                     <p>{name} is not flying right now. Come back later!</p>
-                    <img src={AirplaneInHangar} alt={"Jesse's airplane in its hangar"} />
+                    <img src={FireflyInPA} alt={"Jesse's airplane on the ground"} />
                 </div>
 
             )
