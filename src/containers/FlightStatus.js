@@ -43,7 +43,7 @@ export default class FlightStatus extends Component {
             if (this.state.flightStatus.isStale) {
                 stalenessParagraph = (<p><b>Flight information is outdated.</b> You are not currently
                 seeing the most up-to-date information for the flight. This is most likely because {name} is
-                in the process of landing.</p>)
+                landing.</p>)
             }
             else {
                 stalenessParagraph = '';
@@ -53,8 +53,6 @@ export default class FlightStatus extends Component {
                     <p>{name} is flying!</p>
                     {stalenessParagraph}
                     <dl>
-                        <dt>Tail number</dt>
-                        <dd>{this.state.flightStatus.tailNumber}</dd>
                         <dt>Altitude</dt>
                         <dd>{JSON.stringify(this.state.flightStatus.altitude * 100)}</dd>
                         <dt>Groundspeed</dt>
