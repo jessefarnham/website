@@ -64,8 +64,9 @@ export default class FlightStatus extends Component {
                         <dt>Last update</dt>
                         <dd>{this.state.time.toLocaleTimeString()}</dd>
                     </dl>
-                    <p>This flight may be visible {" "} <a href={flightAwareUrl}>on FlightAware</a>,
-                        which updates more quickly than this website.</p>
+                    <p>This flight can be seen {" "} <a href={flightAwareUrl}>on FlightAware</a>,
+                        which updates more quickly than this website. You may need a FlightAware account
+                        to see it.</p>
                 </div>
             )
         }
@@ -74,7 +75,8 @@ export default class FlightStatus extends Component {
                 <div>
                     <p>{name} is not flying right now. Come back later!</p>
                     <p>Information from recent flights may be visible {" "}
-                        <a href={flightAwareUrl}>on FlightAware.</a></p>
+                        <a href={flightAwareUrl}>on FlightAware</a>. Some flights may not be visible without
+                    a FlightAware account.</p>
                     <img src={FireflyInPA} class={'img-fluid'} alt={"Jesse's airplane on the ground"} />
                 </div>
 
