@@ -39,29 +39,33 @@ export default class FlightStatus extends Component {
         }
         let flightAwareUrl = 'https://www.flightaware.com/live/flight/' + this.state.flightStatus.tailNumber
         if (this.state.flightStatus.isFlying) {
+            let stalenessParagraph;
+            if (this.state.flightStatus.isStale) {
+                stalenessParagraph = (<p><b>Flight information is outdated.</b> You are not currently
+                seeing the most up-to-date information for the flight. This is most likely because {name} is
+                in the process of landing.</p>)
+            }
+            else {
+                stalenessParagraph = '';
+            }
             return (
                 <div>
                     <p>{name} is flying!</p>
-                    <p>This flight may be visible {" "} <a href={flightAwareUrl}>on FlightAware</a>,
-                    which updates more quickly than this website.</p>
+                    {stalenessParagraph}
                     <dl>
                         <dt>Tail number</dt>
                         <dd>{this.state.flightStatus.tailNumber}</dd>
-                        <dt>Is flying</dt>
-                        <dd>{JSON.stringify(this.state.flightStatus.isFlying)}</dd>
                         <dt>Altitude</dt>
                         <dd>{JSON.stringify(this.state.flightStatus.altitude * 100)}</dd>
                         <dt>Groundspeed</dt>
                         <dd>{JSON.stringify(this.state.flightStatus.groundspeed)}</dd>
                         <dt>Heading</dt>
                         <dd>{JSON.stringify(this.state.flightStatus.heading)}</dd>
-                        <dt>Latitude</dt>
-                        <dd>{this.state.flightStatus.lat}</dd>
-                        <dt>Longitude</dt>
-                        <dd>{this.state.flightStatus.long}</dd>
                         <dt>Last update</dt>
                         <dd>{this.state.time.toLocaleTimeString()}</dd>
                     </dl>
+                    <p>This flight may be visible {" "} <a href={flightAwareUrl}>on FlightAware</a>,
+                        which updates more quickly than this website.</p>
                 </div>
             )
         }
@@ -69,7 +73,6 @@ export default class FlightStatus extends Component {
             return (
                 <div>
                     <p>{name} is not flying right now. Come back later!</p>
-
                     <p>Information from recent flights may be visible {" "}
                         <a href={flightAwareUrl}>on FlightAware.</a></p>
                     <img src={FireflyInPA} class={'img-fluid'} alt={"Jesse's airplane on the ground"} />
