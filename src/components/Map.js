@@ -12,6 +12,23 @@ const mapStyles = {
 
 class MapContainer extends Component {
 
+    constructor(props) {
+        super(props);
+        let lastTrack = [];
+        let boundsAttribute = null;
+        if (!this.props.flightInfo.isFlying) {
+            boundsAttribute = new this.props.google.maps.LatLngBounds();
+            for (let i = 0; i < this.props.lastTrackInfo.GetHistoricalTrackResult.data.length; i++) {
+                const rawObj = this.props.lastTrackInfo.GetHistoricalTrackResult.data[i];
+                const processedObj = {lat: rawObj.latitude, lng: rawObj.longitude};
+                lastTrack.push(processedObj);
+                boundsAttribute.extend(processedObj);
+            }
+        }
+        this.state = {boundsAttribute: boundsAttribute,
+                      lastTrack: lastTrack};
+    }
+
     render() {
         let mapElement;
         if (this.props.flightInfo.isFlying) {
@@ -46,17 +63,9 @@ class MapContainer extends Component {
             );
         }
         else {
-            let lastTrack = [];
-            let boundsAttribute = new this.props.google.maps.LatLngBounds();
-            for (let i = 0; i < this.props.lastTrackInfo.GetHistoricalTrackResult.data.length; i++) {
-                const rawObj = this.props.lastTrackInfo.GetHistoricalTrackResult.data[i];
-                const processedObj = {lat: rawObj.latitude, lng: rawObj.longitude};
-                lastTrack.push(processedObj);
-                boundsAttribute.extend(processedObj);
-            }
             let polyLineElement = (
                 <Polyline
-                    path={lastTrack}
+                    path={this.state.lastTrack}
                     geodesic={true}
                     strokeColor={'red'}
                     strokeOpacity={1.0}
@@ -67,14 +76,21 @@ class MapContainer extends Component {
                 <Map
                     google={this.props.google}
                     style={mapStyles}
-                    initialCenter={lastTrack[0]}
-                    bounds={boundsAttribute}
+                    bounds={this.state.boundsAttribute}
+                    onReady={this.adjustMap}
                 >
                     {polyLineElement}
                 </Map>
-            )
+            );
         }
         return mapElement;
+    }
+
+    adjustMap(mapProps, map) {
+        let boundsAttribute = mapProps.bounds;
+        if (boundsAttribute) {
+            map.fitBounds(boundsAttribute);
+        }
     }
 }
 
