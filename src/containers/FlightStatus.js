@@ -17,8 +17,13 @@ export default class FlightStatus extends Component {
     }
 
     async loadStatus() {
-        let flightStatus =  await API.get('flight-info', '/flightinfo/active');
-        this.setState({time: new Date(), flightStatus: flightStatus})
+        let flightStatus = await API.get('flight-info', '/flightinfo/active');
+        let lastTrackStatus = null;
+        if (!flightStatus.isFlying) {
+            lastTrackStatus = await API.get('flight-info', '/flightinfo/lasttrack');
+        }
+        this.setState({time: new Date(), flightStatus: flightStatus,
+                             lastTrackStatus: lastTrackStatus})
     }
 
     componentDidMount(){
@@ -38,7 +43,7 @@ export default class FlightStatus extends Component {
             name = this.state.flightStatus.tailNumber;
         }
         let flightAwareUrl = 'https://www.flightaware.com/live/flight/' + this.state.flightStatus.tailNumber
-        if (true || this.state.flightStatus.isFlying) {
+        if (this.state.flightStatus.isFlying) {
             let stalenessParagraph;
             if (this.state.flightStatus.isStale) {
                 stalenessParagraph = (<p><b>Flight information is outdated.</b> You are not currently
@@ -84,7 +89,10 @@ export default class FlightStatus extends Component {
 
     renderMap() {
         return (
-            <MapContainer flightInfo={this.state.flightStatus} />
+            <MapContainer
+                flightInfo={this.state.flightStatus}
+                lastTrackInfo={this.state.lastTrackStatus}
+            />
         )
     }
 
@@ -98,7 +106,7 @@ export default class FlightStatus extends Component {
                     </p>
                 </div>
                 <div className={'map'}>
-                    {this.state.time && !this.state.flightStatus.isFlying && this.renderMap()}
+                    {this.state.time && this.renderMap()}
                 </div>
             </div>
         )

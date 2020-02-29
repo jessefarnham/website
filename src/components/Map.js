@@ -51,7 +51,7 @@ class MapContainer extends Component {
                     strokeOpacity={1.0}
                     strokeWeight={2}
                 />
-            )
+            );
         }
 
         return(
