@@ -80,7 +80,7 @@ export default class FlightStatus extends Component {
                     <p>Information from recent flights may be visible {" "}
                         <a href={flightAwareUrl}>on FlightAware</a>. Some flights may not be visible without
                     a FlightAware account.</p>
-                    <p>Here is the path of {name}'s last flight.</p>
+                    <p>Below you can see the path of {name}'s last flight.</p>
                 </div>
 
             )
