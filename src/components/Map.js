@@ -13,16 +13,15 @@ const mapStyles = {
 class MapContainer extends Component {
 
     render() {
-        const loc = {
-            lat: this.props.flightInfo.lat,
-            lng: this.props.flightInfo.long
-        };
-        let markerElement;
-        let polyLineElement;
+        let mapElement;
         if (this.props.flightInfo.isFlying) {
-            markerElement = (
+            let locAttribute = {
+                lat: this.props.flightInfo.lat,
+                lng: this.props.flightInfo.long
+            };
+            let markerElement = (
                 <Marker
-                    position={loc}
+                    position={locAttribute}
                     icon={{
                         path: this.props.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
                         rotation: this.props.flightInfo.heading,
@@ -34,16 +33,28 @@ class MapContainer extends Component {
                 />
 
             );
-            polyLineElement = '';
+            mapElement = (
+                <Map
+                    google={this.props.google}
+                    zoom={10}
+                    style={mapStyles}
+                    initialCenter={locAttribute}
+                    center={locAttribute}
+                >
+                    {markerElement}
+                </Map>
+            );
         }
         else {
-            markerElement = '';
             let lastTrack = [];
+            let boundsAttribute = new this.props.google.maps.LatLngBounds();
             for (let i = 0; i < this.props.lastTrackInfo.GetHistoricalTrackResult.data.length; i++) {
                 const rawObj = this.props.lastTrackInfo.GetHistoricalTrackResult.data[i];
-                lastTrack.push({lat: rawObj.latitude, lng: rawObj.longitude});
+                const processedObj = {lat: rawObj.latitude, lng: rawObj.longitude};
+                lastTrack.push(processedObj);
+                boundsAttribute.extend(processedObj);
             }
-            polyLineElement = (
+            let polyLineElement = (
                 <Polyline
                     path={lastTrack}
                     geodesic={true}
@@ -52,20 +63,18 @@ class MapContainer extends Component {
                     strokeWeight={2}
                 />
             );
+            mapElement = (
+                <Map
+                    google={this.props.google}
+                    style={mapStyles}
+                    initialCenter={lastTrack[0]}
+                    bounds={boundsAttribute}
+                >
+                    {polyLineElement}
+                </Map>
+            )
         }
-
-        return(
-            <Map
-                google={this.props.google}
-                zoom={10}
-                style={mapStyles}
-                initialCenter={loc}
-                center={loc}
-            >
-                {markerElement}
-                {polyLineElement}
-            </Map>
-        );
+        return mapElement;
     }
 }
 
