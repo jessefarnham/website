@@ -80,7 +80,6 @@ export default class FlightStatus extends Component {
                     <p>Information from recent flights may be visible {" "}
                         <a href={flightAwareUrl}>on FlightAware</a>. Some flights may not be visible without
                     a FlightAware account.</p>
-                    <img src={FireflyInPA} class={'img-fluid'} alt={"Jesse's airplane on the ground"} />
                 </div>
 
             )
@@ -96,6 +95,18 @@ export default class FlightStatus extends Component {
         )
     }
 
+    renderFireflyImg() {
+        if (this.state.flightStatus.isFlying) {
+            return '';
+        }
+        else {
+            return (
+                <img src={FireflyInPA} className={'img-fluid'}
+                     alt={"Jesse's airplane on the ground"}/>
+            );
+        }
+    }
+
     render() {
         return (
             <div className='FlightStatus'>
@@ -108,6 +119,9 @@ export default class FlightStatus extends Component {
                 <div className={'map'}>
                     {this.state.time && this.renderMap()}
                 </div>
+                {/*<div className={'fireflyImg'}>*/}
+                {/*    {this.state.time && this.renderFireflyImg()}*/}
+                {/*</div>*/}
             </div>
         )
     }
