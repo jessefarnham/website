@@ -38,7 +38,7 @@ export default class FlightStatus extends Component {
             name = this.state.flightStatus.tailNumber;
         }
         let flightAwareUrl = 'https://www.flightaware.com/live/flight/' + this.state.flightStatus.tailNumber
-        if (this.state.flightStatus.isFlying) {
+        if (true || this.state.flightStatus.isFlying) {
             let stalenessParagraph;
             if (this.state.flightStatus.isStale) {
                 stalenessParagraph = (<p><b>Flight information is outdated.</b> You are not currently
@@ -98,7 +98,7 @@ export default class FlightStatus extends Component {
                     </p>
                 </div>
                 <div className={'map'}>
-                    {this.state.time && this.state.flightStatus.isFlying && this.renderMap()}
+                    {this.state.time && !this.state.flightStatus.isFlying && this.renderMap()}
                 </div>
             </div>
         )

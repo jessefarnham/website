@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Map, GoogleApiWrapper, Marker } from 'google-maps-react';
+import { Map, GoogleApiWrapper, Marker, Polyline } from 'google-maps-react';
 
 const googleApiKey = process.env.REACT_APP_GOOGLE_API_KEY;
 
@@ -17,14 +17,10 @@ class MapContainer extends Component {
             lat: this.props.flightInfo.lat,
             lng: this.props.flightInfo.long
         };
-        return(
-            <Map
-                google={this.props.google}
-                zoom={10}
-                style={mapStyles}
-                initialCenter={loc}
-                center={loc}
-            >
+        let markerElement;
+        let polyLineElement;
+        if (this.props.flightInfo.isFlying) {
+            markerElement = (
                 <Marker
                     position={loc}
                     icon={{
@@ -36,6 +32,38 @@ class MapContainer extends Component {
                         strokeWeight: 2
                     }}
                 />
+
+            );
+            polyLineElement = '';
+        }
+        else {
+            markerElement = '';
+            let lastTrack = [];
+            for (let i = 0; i < this.props.lastTrackInfo.GetHistoricalTrackResult.data.length; i++) {
+                const rawObj = this.props.lastTrackInfo.GetHistoricalTrackResult.data[i];
+                lastTrack.push({lat: rawObj.latitude, lng: rawObj.longitude});
+            }
+            polyLineElement = (
+                <Polyline
+                    path={lastTrack}
+                    geodesic={true}
+                    strokeColor={'red'}
+                    strokeOpacity={1.0}
+                    strokeWeight={2}
+                />
+            )
+        }
+
+        return(
+            <Map
+                google={this.props.google}
+                zoom={10}
+                style={mapStyles}
+                initialCenter={loc}
+                center={loc}
+            >
+                {markerElement}
+                {polyLineElement}
             </Map>
         );
     }
