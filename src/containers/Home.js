@@ -52,7 +52,7 @@ export default function Home() {
                 </p>
                 <hr/>
                 <footer>
-                This page was last modified on {document.lastModified}.
+                This page was last modified on April 2, 2020.
                 </footer>
             </div>
         </div>
