@@ -9,9 +9,9 @@ export default function Home() {
                 <h4>Contact, Resume, Other Info</h4>
                 <ul>
                     <li>Email: jessefarnham1 at gmail dot com</li>
+                    <li><a href={Resume}>My resume</a></li>
                     <li><a href="http://www.github.com/jessefarnham">
                         My Github </a></li>
-                    <li><a href={Resume}>My resume</a></li>
                     <li><a href="http://www.github.com/jessefarnham/website">
                         Source code for this website</a></li>
                     <li><a href="http://www.github.com/jessefarnham/flight-info">
