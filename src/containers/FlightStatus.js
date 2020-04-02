@@ -89,10 +89,12 @@ export default class FlightStatus extends Component {
 
     renderMap() {
         return (
-            <MapContainer
-                flightInfo={this.state.flightStatus}
-                lastTrackInfo={this.state.lastTrackStatus}
-            />
+           <div>
+               <MapContainer
+                    flightInfo={this.state.flightStatus}
+                    lastTrackInfo={this.state.lastTrackStatus}
+                />
+          </div>
         )
     }
 
@@ -120,9 +122,9 @@ export default class FlightStatus extends Component {
                 <div className={'map'}>
                     {this.state.time && this.renderMap()}
                 </div>
-                {/*<div className={'fireflyImg'}>*/}
-                {/*    {this.state.time && this.renderFireflyImg()}*/}
-                {/*</div>*/}
+                <div className={'fireflyImg'}>
+                    {this.state.time && this.renderFireflyImg()}
+                </div>
             </div>
         )
     }

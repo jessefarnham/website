@@ -11,3 +11,10 @@
 .FlightStatus .lander p {
     color: #999;
 }
+
+.FlightStatus .map {
+}
+
+.FlightStatus .fireflyImg {
+    margin-top: 700px;
+}
