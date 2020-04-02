@@ -18,6 +18,9 @@ function App(props) {
                     <LinkContainer to='/flightstatus'>
                         <Nav.Link>Flight Status</Nav.Link>
                     </LinkContainer>
+                    <LinkContainer to='/contact'>
+                        <Nav.Link>Contact</Nav.Link>
+                    </LinkContainer>
                 </Nav>
             </Navbar.Collapse>
         </Navbar>
