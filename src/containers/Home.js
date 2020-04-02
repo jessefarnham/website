@@ -9,7 +9,7 @@ export default function Home() {
                 <h2>Jesse Farnham, Ph.D.</h2>
                 <h4>Professional overview</h4>
                 <p>I am a software engineer working in the finance industry.
-                   As of April 2020, I will be working as a lead quantitative
+                   Starting April 2020, I will be working as a lead quantitative
                    developer on the commodities team at { }
                    <a href="http://www.citadel.com">Citadel</a> in Greenwich, CT.
                    I work primarily in Python and have experience with Scala.
