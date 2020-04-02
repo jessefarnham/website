@@ -1,5 +1,6 @@
 import React from 'react'
 import "./Home.css"
+import FireflyInPA from './fireflyInPA.jpg';
 
 export default function Home() {
     return (
@@ -50,6 +51,8 @@ export default function Home() {
                 and trying to keep up with my fianc&eacute;e's knowledge of geology and
                 environmental science.
                 </p>
+                <img src={FireflyInPA} alt="The Firefly on the ground"
+                 className="img-fluid"/>
                 <hr/>
                 <footer>
                 This page was last modified on April 2, 2020.

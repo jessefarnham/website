@@ -122,9 +122,9 @@ export default class FlightStatus extends Component {
                 <div className={'map'}>
                     {this.state.time && this.renderMap()}
                 </div>
-                <div className={'fireflyImg'}>
+            {/*<div className={'fireflyImg'}>
                     {this.state.time && this.renderFireflyImg()}
-                </div>
+                </div>*/}
             </div>
         )
     }
