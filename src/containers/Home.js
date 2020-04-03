@@ -47,7 +47,7 @@ export default function Home() {
                 My main non-work interests involve aviation and being outdoors. I own and fly
                 a 1946 Cessna 140, "The Firefly;" click "Flight Status" above to see where I
                 have flown recently. I also enjoy powered paragliding, flying R/C gliders,
-                birding, hiking, backcountry camping, mountainbiking, scuba diving,
+                birding, hiking, backpacking, mountainbiking, scuba diving,
                 winter sports,
                 and trying to keep up with my fianc&eacute;e's knowledge of geology and
                 environmental science.
