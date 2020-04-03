@@ -48,6 +48,7 @@ export default function Home() {
                 a 1946 Cessna 140, "The Firefly;" click "Flight Status" above to see where I
                 have flown recently. I also enjoy powered paragliding, flying R/C gliders,
                 birding, hiking, backcountry camping, mountainbiking, scuba diving,
+                winter sports,
                 and trying to keep up with my fianc&eacute;e's knowledge of geology and
                 environmental science.
                 </p>
@@ -55,7 +56,7 @@ export default function Home() {
                  className="img-fluid"/>
                 <hr/>
                 <footer>
-                This page was last modified on April 2, 2020.
+                This page was last modified on April 3, 2020.
                 </footer>
             </div>
         </div>
