@@ -116,7 +116,7 @@ export default class FlightStatus extends Component {
                 <div className='lander'>
                     <h1>Flight Status</h1>
                     <p>
-                        {this.state.time && this.renderFlightInfo()}
+                        {this.state.time ? this.renderFlightInfo() : 'Loading, please wait...'}
                     </p>
                 </div>
                 <div className={'map'}>
