@@ -40,10 +40,10 @@ export default function Home() {
                 <p>
                 I am always interested in improving my knowledge of the technology world.
 		Most recently I have been learning about low-level software engineering by
-		attempting to implement <a href="https://github.com/jessefarnham/apple2/blob/main/main.s">
-		Tetris in Apple 6502 assembly language</a> 
-	        and by studying the 
-		<a href="https://www.amazon.com/Lions-Commentary-Unix-John/dp/1573980137">
+		attempting to implement { } 
+		<a href="https://github.com/jessefarnham/apple2/blob/main/main.s"> { }
+		Tetris in Apple 6502 assembly language</a> { } and by studying the 
+		{ }<a href="https://www.amazon.com/Lions-Commentary-Unix-John/dp/1573980137"> { }
 		source code of the UNIX operating system</a>.
                 </p>
                 <h4>Other Interests</h4>
