@@ -13,7 +13,7 @@ export default function Home() {
                    <a href="http://www.citadel.com">Citadel</a> in Greenwich, CT.
                    I work primarily in Python and have experience with Scala.
                    My primary engineering interests are systems and API design;
-		   my current business focus is the modeling and pricing of 
+		   my current business focus is the modeling and pricing of
                    exotic structured commodity derivatives. Previously, I worked
 		   on market analytics for natural gas in North America.
                 </p>
@@ -40,9 +40,9 @@ export default function Home() {
                 <p>
                 I am always interested in improving my knowledge of the technology world.
 		Most recently I have been learning about low-level software engineering by
-		attempting to implement { } 
+		attempting to implement { }
 		<a href="https://github.com/jessefarnham/apple2/blob/main/main.s"> { }
-		Tetris in Apple 6502 assembly language</a> { } and by studying the 
+		Tetris in Apple 6502 assembly language</a> { } and by studying the
 		{ }<a href="https://www.amazon.com/Lions-Commentary-Unix-John/dp/1573980137"> { }
 		source code of the UNIX operating system</a>.
                 </p>
@@ -59,7 +59,7 @@ export default function Home() {
                  className="img-fluid"/>
                 <hr/>
                 <footer>
-                This page was last modified on July 27, 2024.
+                This page was last modified on October 14, 2024.
                 </footer>
             </div>
         </div>
