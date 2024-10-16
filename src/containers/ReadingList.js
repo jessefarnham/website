@@ -1,9 +1,10 @@
 import React from 'react'
-import "./ReadingList.css"
+import "./Contact.css"
+import Resume from "./jesse_farnham_resume.pdf"
 
 export default function Home() {
     return (
-        <div className="ReadingList">
+        <div className="Contact">
             <div className="lander">
                 <h4>Engineering Reading List</h4>
 
