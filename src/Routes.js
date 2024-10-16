@@ -3,6 +3,7 @@ import {Route, Switch} from 'react-router-dom';
 import Home from './containers/Home';
 import FlightStatus from './containers/FlightStatus';
 import Contact from './containers/Contact';
+import ReadingList from './containers/ReadingList';
 import NotFound from './containers/NotFound';
 
 export default function Routes() {
