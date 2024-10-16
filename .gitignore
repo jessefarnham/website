@@ -20,3 +20,4 @@ state.json
 
 auth.yml
 auth.sh
+.DS_store

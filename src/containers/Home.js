@@ -59,7 +59,7 @@ export default function Home() {
                  className="img-fluid"/>
                 <hr/>
                 <footer>
-                This page was last modified on October 14, 2024.
+                This site was last modified on October 16, 2024.
                 </footer>
             </div>
         </div>

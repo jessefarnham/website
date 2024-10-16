@@ -11,6 +11,7 @@ export default function Routes() {
             <Route path='/' exact component={Home} />
             <Route path='/flightstatus' exact component={FlightStatus} />
             <Route path='/contact' exact component={Contact} />
+            <Route path='/readinglist' exact component={ReadingList} />
             <Route component={NotFound} />
         </Switch>
     );

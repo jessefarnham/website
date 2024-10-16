@@ -16,6 +16,9 @@ function App(props) {
             <LinkContainer to='/contact'>
                 <Nav.Link>Contact</Nav.Link>
             </LinkContainer>
+            <LinkContainer to='/readinglist'>
+                <Nav.Link>Engineering Reading List</Nav.Link>
+            </LinkContainer>
         </Navbar>
         <Routes />
     </div>
