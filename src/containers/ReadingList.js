@@ -18,7 +18,7 @@ export default function Home() {
                 <ul>
                     <li>
                         <strong>Computer architecture:</strong>
-                        <a href="https://a.co/d/97CRu7y" target="_blank">
+                        <a href="https://a.co/d/97CRu7y" target="_blank" rel="noopener noreferrer">
                             Structured Computer Organization
                         </a>
                         by Tanenbaum. A bottom-up description of how a computer works, from
@@ -26,7 +26,7 @@ export default function Home() {
                     </li>
                     <li>
                         <strong>Operating systems:</strong>
-                        <a href="https://a.co/d/f53CELx" target="_blank">
+                        <a href="https://a.co/d/f53CELx" target="_blank" rel="noopener noreferrer">
                             Modern Operating Systems
                         </a>
                         by Tanenbaum. Operating systems are just one chapter of the above
@@ -36,7 +36,7 @@ export default function Home() {
                     </li>
                     <li>
                         <strong>Networking:</strong>
-                        <a href="https://a.co/d/0UzLFNl" target="_blank">
+                        <a href="https://a.co/d/0UzLFNl" target="_blank" rel="noopener noreferrer">
                             Computer Networks
                         </a>
                         by Tanenbaum and Wetherall. This is my favorite Tanenbaum book; it
@@ -59,7 +59,7 @@ export default function Home() {
                 <h5>Books on Professional Software Engineering</h5>
                 <ul>
                     <li>
-                        <a href="https://a.co/d/9US18Li" target="_blank">
+                        <a href="https://a.co/d/9US18Li" target="_blank" rel="noopener noreferrer">
                             <strong>Code Complete</strong>
                         </a>
                         by McConnell. An excellent overall manual for good software
@@ -69,7 +69,7 @@ export default function Home() {
                         corporate environment.
                     </li>
                     <li>
-                        <a href="https://a.co/d/dBX8T67" target="_blank">
+                        <a href="https://a.co/d/dBX8T67" target="_blank" rel="noopener noreferrer">
                             <strong>Software Requirements</strong>
                         </a>
                         by Beatty and Wiegers. More relevant for developers who are in the
@@ -82,25 +82,25 @@ export default function Home() {
                 <h5>Books That I Plan to Read</h5>
                 <ul>
                     <li>
-                        <a href="https://a.co/d/8Wxs5hf" target="_blank">
+                        <a href="https://a.co/d/8Wxs5hf" target="_blank" rel="noopener noreferrer">
                             <strong>The Pragmatic Programmer</strong>
                         </a>
                         by Thomas and Hunt
                     </li>
                     <li>
-                        <a href="https://a.co/d/45zOwcp" target="_blank">
+                        <a href="https://a.co/d/45zOwcp" target="_blank" rel="noopener noreferrer">
                             <strong>Programming Pearls</strong>
                         </a>
                         by John Bentley
                     </li>
                     <li>
-                        <a href="https://a.co/d/9JRrUt5" target="_blank">
+                        <a href="https://a.co/d/9JRrUt5" target="_blank" rel="noopener noreferrer">
                             <strong>Pattern-Oriented Software Architecture</strong>
                         </a>
                         series
                     </li>
                     <li>
-                        <a href="https://a.co/d/6CBNDhZ" target="_blank">
+                        <a href="https://a.co/d/6CBNDhZ" target="_blank" rel="noopener noreferrer">
                             <strong>The Art of Computer Programming</strong>
                         </a>
                         series by Donald Knuth
@@ -115,7 +115,7 @@ export default function Home() {
                     of this.
                 </p>
                 <p>
-                    <a href="https://a.co/d/8we0rAt" target="_blank">
+                    <a href="https://a.co/d/8we0rAt" target="_blank" rel="noopener noreferrer">
                         <strong>Introduction to Algorithms</strong>
                     </a>
                     by Cormen, Leiserson, Rivest, and Stein. This book is often known as
