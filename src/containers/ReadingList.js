@@ -1,6 +1,6 @@
 import React from 'react'
 import "./Contact.css"
-import Resume from "./jesse_farnham_resume.pdf"
+
 
 export default function Home() {
     return (
