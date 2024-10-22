@@ -17,28 +17,28 @@ export default function Home() {
                 <h5>Academic Textbooks</h5>
                 <ul>
                     <li>
-                        <strong>Computer architecture:</strong>{ }
+                        <strong>Computer architecture:</strong> { }
                         <a href="https://a.co/d/97CRu7y" target="_blank" rel="noopener noreferrer">
                             Structured Computer Organization
-                        </a>
-                        { }by Tanenbaum. A bottom-up description of how a computer works, from
+                        </a> { }
+                        by Tanenbaum. A bottom-up description of how a computer works, from
                         the logic gates all the way up to high-level programming languages.
                     </li>
                     <li>
-                        <strong>Operating systems:</strong>{ }
+                        <strong>Operating systems:</strong> { }
                         <a href="https://a.co/d/f53CELx" target="_blank" rel="noopener noreferrer">
                             Modern Operating Systems
-                        </a>{ }
+                        </a> { }
                         by Tanenbaum. Operating systems are just one chapter of the above
                         computer architecture book. I would try reading the above book first
                         and see if you like the author’s bottom-up style. If you do, and you
                         want more detail on the operating system level, check this book out.
                     </li>
                     <li>
-                        <strong>Networking:</strong>{ }
+                        <strong>Networking:</strong> { }
                         <a href="https://a.co/d/0UzLFNl" target="_blank" rel="noopener noreferrer">
                             Computer Networks
-                        </a>{ }
+                        </a> { }
                         by Tanenbaum and Wetherall. This is my favorite Tanenbaum book; it
                         greatly improved my understanding of API design. Some people don’t
                         like Tanenbaum's bottom-up approach, so you may prefer a different
@@ -61,7 +61,7 @@ export default function Home() {
                     <li>
                         <a href="https://a.co/d/9US18Li" target="_blank" rel="noopener noreferrer">
                             <strong>Code Complete</strong>
-                        </a>{ }
+                        </a> { }
                         by McConnell. An excellent overall manual for good software
                         engineering practices. Even if you don't read all (or any) of this
                         book, you can use the bibliography of each chapter as a way to find
@@ -71,7 +71,7 @@ export default function Home() {
                     <li>
                         <a href="https://a.co/d/dBX8T67" target="_blank" rel="noopener noreferrer">
                             <strong>Software Requirements</strong>
-                        </a>{ }
+                        </a> { }
                         by Beatty and Wiegers. More relevant for developers who are in the
                         senior engineer/tech lead stage of their careers. It turns out that
                         the hardest part of professional software engineering is often
@@ -84,25 +84,25 @@ export default function Home() {
                     <li>
                         <a href="https://a.co/d/8Wxs5hf" target="_blank" rel="noopener noreferrer">
                             <strong>The Pragmatic Programmer</strong>
-                        </a>{ }
+                        </a> { }
                         by Thomas and Hunt
                     </li>
                     <li>
                         <a href="https://a.co/d/45zOwcp" target="_blank" rel="noopener noreferrer">
                             <strong>Programming Pearls</strong>
-                        </a>{ }
+                        </a> { }
                         by John Bentley
                     </li>
                     <li>
                         <a href="https://a.co/d/9JRrUt5" target="_blank" rel="noopener noreferrer">
                             <strong>Pattern-Oriented Software Architecture</strong>
-                        </a>{ }
+                        </a> { }
                         series
                     </li>
                     <li>
                         <a href="https://a.co/d/6CBNDhZ" target="_blank" rel="noopener noreferrer">
                             <strong>The Art of Computer Programming</strong>
-                        </a>{ }
+                        </a> { }
                         series by Donald Knuth
                     </li>
                 </ul>
@@ -117,7 +117,7 @@ export default function Home() {
                 <p>
                     <a href="https://a.co/d/8we0rAt" target="_blank" rel="noopener noreferrer">
                         <strong>Introduction to Algorithms</strong>
-                    </a>{ }
+                    </a> { }
                     by Cormen, Leiserson, Rivest, and Stein. This book is often known as
                     "CLRS" in the academic CS community.
                 </p>
