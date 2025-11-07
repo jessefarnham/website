@@ -54,13 +54,13 @@ export default function Home() {
                 I own and fly a 1946 Cessna 140, "The Firefly;" click "Flight Status" above 
                 to see where I have flown recently. I also enjoy flying R/C gliders,
                 birding, hiking, backpacking, mountainbiking, scuba diving, and
-                winter sports,
+                winter sports.
                 </p>
                 <img src={FireflyInPA} alt="The Firefly on the ground"
                  className="img-fluid"/>
                 <hr/>
                 <footer>
-                This site was last modified on October 31, 2025.
+                This site was last modified on November 7, 2025.
                 </footer>
             </div>
         </div>
