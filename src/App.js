@@ -19,6 +19,9 @@ function App(props) {
             <LinkContainer to='/readinglist'>
                 <Nav.Link>Engineering Reading List</Nav.Link>
             </LinkContainer>
+            <LinkContainer to='/flightplanner'>
+                <Nav.Link>Flight Planner</Nav.Link>
+            </LinkContainer>
         </Navbar>
         <Routes />
     </div>
