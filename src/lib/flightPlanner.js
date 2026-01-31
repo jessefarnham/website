@@ -11,14 +11,8 @@
  * - Altitude optimization
  */
 
-// Try to import geomag, fall back to inline calculation if not available
-let geomag;
-try {
-  geomag = require('geomag');
-} catch (e) {
-  console.warn('geomag library not found, using fallback calculation');
-  geomag = null;
-}
+// Import geomag library
+import * as geomag from 'geomag';
 
 // Constants
 const EARTH_RADIUS_NM = 3440.065; // Earth radius in nautical miles
@@ -164,14 +158,14 @@ export function segmentRoute(lat1, lon1, lat2, lon2, segmentDistanceNM) {
  * @returns {number} Magnetic declination in degrees (positive = east)
  */
 export function calculateMagneticDeclination(lat, lon, altitudeMeters = 0, date = new Date()) {
-  if (geomag) {
-    const mag = geomag.model().point([lat, lon, altitudeMeters / 1000]); // geomag expects km
-    return mag.decl;
-  } else {
+  try {
+    // geomag v1.0.0 API: geomag.field(lat, lon, altitudeKm)
+    const altitudeKm = altitudeMeters / 1000;
+    const field = geomag.field(lat, lon, altitudeKm);
+    return field.declination;
+  } catch (error) {
     // Fallback: use simple approximation based on IGRF-13 coefficients
-    // This is a very rough approximation and should be replaced with proper geomag
-    // For now, return a placeholder that indicates we need the library
-    console.warn('Using approximate magnetic declination - install geomag for accuracy');
+    console.warn('Geomag calculation failed, using approximate magnetic declination:', error);
     // Very rough approximation for continental US: varies from -20° (west) to +20° (east)
     // Eastern US: ~-15° to -10°, Western US: ~10° to 20°
     const approxDeclination = (lon + 100) / 10; // Very rough estimate
@@ -363,6 +357,11 @@ export async function fetchWindsAloft(region) {
  * @returns {object} Selected forecast with warning if applicable
  */
 export function selectForecast(forecasts, departureTime) {
+  // Handle empty forecasts array
+  if (!forecasts || forecasts.length === 0) {
+    throw new Error('No forecast data available. Unable to calculate flight plan without winds aloft data.');
+  }
+  
   const departureUTC = departureTime.getUTCHours() * 100 + departureTime.getUTCMinutes();
   
   for (const forecast of forecasts) {
@@ -743,9 +742,9 @@ export async function calculateOptimalAltitude(params) {
   }
   
   // Find optimal altitudes
-  const optimalTheoretical = results.theoretical.reduce((best, curr) =>
+  const optimalTheoretical = results.theoretical.length > 0 ? results.theoretical.reduce((best, curr) =>
     curr.avgGroundspeed > best.avgGroundspeed ? curr : best
-  );
+  ) : null;
   
   const optimalVFR = results.vfr.length > 0 ? results.vfr.reduce((best, curr) =>
     curr.avgGroundspeed > best.avgGroundspeed ? curr : best

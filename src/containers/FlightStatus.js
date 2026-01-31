@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { API } from 'aws-amplify'
+import { get } from 'aws-amplify/api'
 import MapContainer from '../components/Map';
 import './FlightStatus.css';
 import Config from '../config';
@@ -17,10 +17,10 @@ export default class FlightStatus extends Component {
     }
 
     async loadStatus() {
-        let flightStatus = await API.get('flight-info', '/flightinfo/active');
+        let flightStatus = await get({ apiName: 'flight-info', path: '/flightinfo/active' }).response.then(r => r.body.json());
         let lastTrackStatus = null;
         if (!flightStatus.isFlying) {
-            lastTrackStatus = await API.get('flight-info', '/flightinfo/lasttrack');
+            lastTrackStatus = await get({ apiName: 'flight-info', path: '/flightinfo/lasttrack' }).response.then(r => r.body.json());
         }
         this.setState({time: new Date(), flightStatus: flightStatus,
                              lastTrackStatus: lastTrackStatus})
