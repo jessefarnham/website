@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Form, Button, Alert, Table, Spinner } from 'react-bootstrap';
-import { calculateOptimalAltitude, getAllAirports } from '../lib/flightPlanner';
+import { calculateOptimalAltitude, searchAirports } from '../lib/flightPlanner';
 import './FlightPlanner.css';
 
 export default class FlightPlanner extends Component {
@@ -25,24 +25,24 @@ export default class FlightPlanner extends Component {
       vfrAltitudes: true,
       
       // UI state
-      airports: [],
       isCalculating: false,
       showComputations: false,
       showMethodology: false,
+      
+      // Airport search state
+      departureSuggestions: [],
+      destinationSuggestions: [],
+      showDepartureSuggestions: false,
+      showDestinationSuggestions: false,
       
       // Results
       results: null,
       error: null
     };
-  }
-  
-  async componentDidMount() {
-    try {
-      const airports = await getAllAirports();
-      this.setState({ airports });
-    } catch (error) {
-      console.error('Failed to load airports:', error);
-    }
+    
+    // Debounce timers
+    this.departureSearchTimer = null;
+    this.destinationSearchTimer = null;
   }
   
   formatDateTimeLocal(date) {
@@ -62,6 +62,56 @@ export default class FlightPlanner extends Component {
     } else {
       this.setState({ [field]: value, results: null, error: null });
     }
+  }
+  
+  handleAirportSearch = (field, suggestionsField, showField) => (event) => {
+    const value = event.target.value.toUpperCase();
+    this.setState({ [field]: value, results: null, error: null });
+    
+    // Clear existing timer
+    const timerField = field === 'departureAirport' ? 'departureSearchTimer' : 'destinationSearchTimer';
+    if (this[timerField]) {
+      clearTimeout(this[timerField]);
+    }
+    
+    // Hide suggestions if input is too short
+    if (value.length < 2) {
+      this.setState({ [suggestionsField]: [], [showField]: false });
+      return;
+    }
+    
+    // Debounce the search
+    this[timerField] = setTimeout(async () => {
+      const results = await searchAirports(value);
+      if (results && results.length > 0) {
+        this.setState({ 
+          [suggestionsField]: results,
+          [showField]: true
+        });
+      } else {
+        this.setState({ 
+          [suggestionsField]: [],
+          [showField]: false
+        });
+      }
+    }, 300);
+  }
+  
+  selectAirport = (field, suggestionsField, showField, code) => {
+    this.setState({
+      [field]: code,
+      [showField]: false,
+      [suggestionsField]: [],
+      results: null,
+      error: null
+    });
+  }
+  
+  hideSuggestions = (showField) => () => {
+    // Delay hiding to allow click to register
+    setTimeout(() => {
+      this.setState({ [showField]: false });
+    }, 200);
   }
   
   isFormValid = () => {
@@ -237,7 +287,7 @@ export default class FlightPlanner extends Component {
         
         <h4>Data Sources</h4>
         <ul>
-          <li><strong>Airport Data:</strong> FAA database via aviationweather.gov stations API, providing coordinates and field elevation.</li>
+          <li><strong>Airport Data:</strong> Coordinates and field elevation from aviationweather.gov stations API. Airport search uses OurAirports open data.</li>
           <li><strong>Winds Aloft:</strong> National Weather Service (NWS) FB winds aloft forecasts from aviationweather.gov, available for 6hr, 12hr, and 24hr forecast periods.</li>
           <li><strong>Surface Weather:</strong> METAR observations from aviationweather.gov for current altimeter and temperature.</li>
           <li><strong>Magnetic Declination:</strong> World Magnetic Model (WMM) via the geomag library.</li>
@@ -267,7 +317,7 @@ export default class FlightPlanner extends Component {
         
         <h4>Assumptions &amp; Limitations</h4>
         <ul>
-          <li>Wind data is taken from the nearest reporting station in the forecast; actual winds along route may vary.</li>
+          <li>Wind data is sampled from the nearest reporting station at each route segment; actual winds may vary between stations.</li>
           <li>Assumes constant indicated airspeed throughout the flight.</li>
           <li>Does not account for terrain, airspace restrictions, or fuel considerations.</li>
           <li>Assumes direct routing between airports (no intermediate waypoints).</li>
@@ -319,16 +369,20 @@ export default class FlightPlanner extends Component {
             ))}
           </tbody>
         </Table>
-        <p className="text-muted" style={{fontSize: '0.85em', marginTop: '0.5em'}}>
-          * Temperature estimated from surface METAR using ISA lapse rate (2°C/1000ft)
-        </p>
+        {optimal.theoretical.segments.some(seg => seg.wind.tempEstimated) && (
+          <p className="text-muted" style={{fontSize: '0.85em', marginTop: '0.5em'}}>
+            * Temperature estimated from surface METAR using ISA lapse rate (2°C/1000ft)
+          </p>
+        )}
       </div>
     );
   }
   
   render() {
     const { departureAirport, destinationAirport, indicatedAirspeed, departureDateTime,
-            minAltitude, maxAltitude, resolutionNM, vfrAltitudes, airports, 
+            minAltitude, maxAltitude, resolutionNM, vfrAltitudes,
+            departureSuggestions, destinationSuggestions,
+            showDepartureSuggestions, showDestinationSuggestions,
             isCalculating, showComputations, showMethodology, results, error } = this.state;
     
     return (
@@ -350,35 +404,53 @@ export default class FlightPlanner extends Component {
         
         <div className="planner-form">
           <Form>
-            <Form.Group controlId="departureAirport">
+            <Form.Group controlId="departureAirport" className="airport-autocomplete">
               <Form.Label>Departure Airport (ICAO)</Form.Label>
               <Form.Control 
                 type="text"
                 value={departureAirport}
-                onChange={this.handleInputChange('departureAirport')}
+                onChange={this.handleAirportSearch('departureAirport', 'departureSuggestions', 'showDepartureSuggestions')}
+                onBlur={this.hideSuggestions('showDepartureSuggestions')}
                 placeholder="e.g., KBOS"
-                list="airports-list"
+                autoComplete="off"
               />
+              {showDepartureSuggestions && departureSuggestions.length > 0 && (
+                <ul className="airport-suggestions">
+                  {departureSuggestions.map(airport => (
+                    <li 
+                      key={airport.code}
+                      onMouseDown={() => this.selectAirport('departureAirport', 'departureSuggestions', 'showDepartureSuggestions', airport.code)}
+                    >
+                      <strong>{airport.code}</strong> - {airport.name}{airport.state ? `, ${airport.state}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Form.Group>
             
-            <Form.Group controlId="destinationAirport">
+            <Form.Group controlId="destinationAirport" className="airport-autocomplete">
               <Form.Label>Destination Airport (ICAO)</Form.Label>
               <Form.Control 
                 type="text"
                 value={destinationAirport}
-                onChange={this.handleInputChange('destinationAirport')}
+                onChange={this.handleAirportSearch('destinationAirport', 'destinationSuggestions', 'showDestinationSuggestions')}
+                onBlur={this.hideSuggestions('showDestinationSuggestions')}
                 placeholder="e.g., KJFK"
-                list="airports-list"
+                autoComplete="off"
               />
+              {showDestinationSuggestions && destinationSuggestions.length > 0 && (
+                <ul className="airport-suggestions">
+                  {destinationSuggestions.map(airport => (
+                    <li 
+                      key={airport.code}
+                      onMouseDown={() => this.selectAirport('destinationAirport', 'destinationSuggestions', 'showDestinationSuggestions', airport.code)}
+                    >
+                      <strong>{airport.code}</strong> - {airport.name}{airport.state ? `, ${airport.state}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Form.Group>
-            
-            <datalist id="airports-list">
-              {airports.map(airport => (
-                <option key={airport.code} value={airport.code}>
-                  {airport.name}
-                </option>
-              ))}
-            </datalist>
             
             <Form.Group controlId="indicatedAirspeed">
               <Form.Label>Expected Indicated Airspeed (knots)</Form.Label>

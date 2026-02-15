@@ -8,12 +8,6 @@ jest.mock('../lib/flightPlanner');
 
 describe('FlightPlanner', () => {
   beforeEach(() => {
-    // Mock getAllAirports for autocomplete
-    flightPlannerLib.getAllAirports.mockResolvedValue([
-      { code: 'KBOS', name: 'Boston Logan International' },
-      { code: 'KJFK', name: 'New York JFK International' },
-    ]);
-
     // Mock calculateOptimalAltitude with realistic response
     flightPlannerLib.calculateOptimalAltitude.mockResolvedValue({
       route: {

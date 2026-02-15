@@ -166,26 +166,6 @@ export function calculateMagneticDeclination(lat, lon, altitudeMeters = 0, date 
   }
 }
 
-// Common airports for autocomplete suggestions
-const COMMON_AIRPORTS = [
-  { code: 'KBOS', name: 'Boston Logan International' },
-  { code: 'KJFK', name: 'New York JFK International' },
-  { code: 'KLGA', name: 'New York LaGuardia' },
-  { code: 'KEWR', name: 'Newark Liberty International' },
-  { code: 'KPHL', name: 'Philadelphia International' },
-  { code: 'KDCA', name: 'Washington Reagan National' },
-  { code: 'KATL', name: 'Atlanta Hartsfield-Jackson' },
-  { code: 'KORD', name: "Chicago O'Hare International" },
-  { code: 'KLAX', name: 'Los Angeles International' },
-  { code: 'KSFO', name: 'San Francisco International' },
-  { code: 'KDEN', name: 'Denver International' },
-  { code: 'KDFW', name: 'Dallas/Fort Worth International' },
-  { code: 'KMIA', name: 'Miami International' },
-  { code: 'KSEA', name: 'Seattle-Tacoma International' },
-  { code: 'KBED', name: 'Hanscom Field' },
-  { code: 'KMVY', name: "Martha's Vineyard" },
-  { code: 'KACK', name: 'Nantucket Memorial' },
-];
 
 /**
  * Fetch airport data from FAA database via API
@@ -219,19 +199,41 @@ export async function getAirportData(icaoCode) {
 }
 
 /**
- * Get list of common airports for autocomplete
- * @returns {Promise<Array>} List of airport codes and names
+ * Search airports by ICAO code or name
+ * @param {string} query - Search query (minimum 2 characters)
+ * @returns {Promise<Array>} List of matching airports
  */
-export async function getAllAirports() {
-  return COMMON_AIRPORTS;
+export async function searchAirports(query) {
+  if (!query || query.length < 2) {
+    return [];
+  }
+  
+  const url = `https://jguz7puem3.execute-api.us-east-1.amazonaws.com/dev/weather/airport-search?q=${encodeURIComponent(query)}`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error('Search failed');
+    }
+    const results = await response.json();
+    return results.map(airport => ({
+      code: airport.icao,
+      name: airport.name,
+      state: airport.state
+    }));
+  } catch (error) {
+    console.error('Airport search error:', error);
+    return [];
+  }
 }
 
 /**
  * Parse winds aloft forecast data
  * @param {string} rawData - Raw text from aviationweather.gov API
+ * @param {object} stationCoords - Optional station coordinates from API response
  * @returns {object} Parsed forecast data
  */
-export function parseWindsAloft(rawData) {
+export function parseWindsAloft(rawData, stationCoords = {}) {
   const lines = rawData.split('\n');
   
   // Parse header info
@@ -326,7 +328,8 @@ export function parseWindsAloft(rawData) {
     useTo,
     tempsNegativeAbove,
     altitudes,
-    airports
+    airports,
+    stationCoords  // Include embedded coordinates
   };
 }
 
@@ -342,8 +345,26 @@ export async function fetchWindsAloft(region) {
     try {
       const url = `https://jguz7puem3.execute-api.us-east-1.amazonaws.com/dev/weather/winds-aloft?region=${region}&fcst=${fcst}`;
       const response = await fetch(url);
-      const rawData = await response.text();
-      const parsed = parseWindsAloft(rawData);
+      
+      if (!response.ok) {
+        console.error(`HTTP error fetching ${fcst}hr forecast: ${response.status}`);
+        continue;
+      }
+      
+      const responseText = await response.text();
+      let rawData, stationCoords = {};
+      
+      // Try to parse as JSON (new format with embedded coordinates)
+      try {
+        const responseData = JSON.parse(responseText);
+        rawData = responseData.raw || responseText;
+        stationCoords = responseData.stationCoords || {};
+      } catch (parseError) {
+        // Fall back to raw text (old format)
+        rawData = responseText;
+      }
+      
+      const parsed = parseWindsAloft(rawData, stationCoords);
       parsed.forecastHour = fcst;
       forecasts.push(parsed);
     } catch (error) {
@@ -416,17 +437,51 @@ export function determineRegion(lat, lon) {
 }
 
 /**
- * Find nearest airport from winds aloft data
+ * Calculate squared distance for fast comparison (no sqrt needed)
+ * Uses equirectangular approximation - accurate enough for finding nearest station
+ * @param {number} lat1 - Latitude 1
+ * @param {number} lon1 - Longitude 1  
+ * @param {number} lat2 - Latitude 2
+ * @param {number} lon2 - Longitude 2
+ * @returns {number} Squared distance (relative units, not actual distance)
+ */
+function fastDistanceSquared(lat1, lon1, lat2, lon2) {
+  const dLat = lat2 - lat1;
+  const dLon = (lon2 - lon1) * Math.cos((lat1 + lat2) * Math.PI / 360);
+  return dLat * dLat + dLon * dLon;
+}
+
+/**
+ * Find nearest airport from winds aloft data using embedded coordinates
+ * Falls back to API lookup if coordinates not embedded
  * @param {number} lat - Latitude to search near
  * @param {number} lon - Longitude to search near
- * @param {object} windsAloftData - Parsed winds aloft data
- * @returns {string} Nearest airport code
+ * @param {object} windsAloftData - Parsed winds aloft data with stationCoords
+ * @returns {string} Nearest airport code (synchronous when coords are embedded)
  */
-export async function findNearestWindsAloftAirport(lat, lon, windsAloftData) {
-  // TODO: Load actual coordinates for winds aloft airports
-  // For now, just return first available airport
-  const airports = Object.keys(windsAloftData.airports);
-  return airports.length > 0 ? airports[0] : null;
+export function findNearestWindsAloftAirport(lat, lon, windsAloftData) {
+  const stationCodes = Object.keys(windsAloftData.airports);
+  const stationCoords = windsAloftData.stationCoords || {};
+  
+  if (stationCodes.length === 0) {
+    return null;
+  }
+  
+  let nearestStation = stationCodes[0];
+  let nearestDistSq = Infinity;
+  
+  for (const code of stationCodes) {
+    const coords = stationCoords[code];
+    if (coords && coords.lat != null && coords.lon != null) {
+      const distSq = fastDistanceSquared(lat, lon, coords.lat, coords.lon);
+      if (distSq < nearestDistSq) {
+        nearestDistSq = distSq;
+        nearestStation = code;
+      }
+    }
+  }
+  
+  return nearestStation;
 }
 
 /**
@@ -728,8 +783,8 @@ export async function calculateOptimalAltitude(params) {
       for (let i = 0; i < segments.length - 1; i++) {
         const segment = segments[i];
         
-        // Find nearest winds aloft airport
-        const nearestAirport = await findNearestWindsAloftAirport(
+        // Find nearest winds aloft airport (now synchronous with embedded coords)
+        const nearestAirport = findNearestWindsAloftAirport(
           segment.lat, segment.lon, forecast
         );
         

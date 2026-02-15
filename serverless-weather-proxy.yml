@@ -58,6 +58,27 @@ functions:
     environment:
       SERVICE_NAME: metar-proxy
 
+  airportSearch:
+    handler: lambda/airport_search.handler
+    description: Search airports by ICAO code or name
+    memorySize: 512
+    timeout: 30
+    events:
+      - http:
+          path: weather/airport-search
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+    environment:
+      SERVICE_NAME: airport-search
+
 # Package settings
 package:
   patterns:
