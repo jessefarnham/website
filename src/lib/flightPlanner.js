@@ -16,16 +16,9 @@ import * as geomag from 'geomag';
 
 // Constants
 const EARTH_RADIUS_NM = 3440.065; // Earth radius in nautical miles
-const KNOTS_TO_MPS = 0.514444; // Conversion factor
 const FEET_TO_METERS = 0.3048;
 const STANDARD_TEMP_KELVIN = 288.15; // ISA sea level temperature in Kelvin
 const TEMP_LAPSE_RATE = 0.0065; // K/m
-const GAS_CONSTANT = 287.05; // J/(kg·K)
-const SEA_LEVEL_DENSITY = 1.225; // kg/m³
-
-// Airport database cache
-let airportCache = null;
-let windsAloftAirports = null;
 
 /**
  * Degrees to radians conversion
@@ -173,53 +166,64 @@ export function calculateMagneticDeclination(lat, lon, altitudeMeters = 0, date 
   }
 }
 
+// Common airports for autocomplete suggestions
+const COMMON_AIRPORTS = [
+  { code: 'KBOS', name: 'Boston Logan International' },
+  { code: 'KJFK', name: 'New York JFK International' },
+  { code: 'KLGA', name: 'New York LaGuardia' },
+  { code: 'KEWR', name: 'Newark Liberty International' },
+  { code: 'KPHL', name: 'Philadelphia International' },
+  { code: 'KDCA', name: 'Washington Reagan National' },
+  { code: 'KATL', name: 'Atlanta Hartsfield-Jackson' },
+  { code: 'KORD', name: "Chicago O'Hare International" },
+  { code: 'KLAX', name: 'Los Angeles International' },
+  { code: 'KSFO', name: 'San Francisco International' },
+  { code: 'KDEN', name: 'Denver International' },
+  { code: 'KDFW', name: 'Dallas/Fort Worth International' },
+  { code: 'KMIA', name: 'Miami International' },
+  { code: 'KSEA', name: 'Seattle-Tacoma International' },
+  { code: 'KBED', name: 'Hanscom Field' },
+  { code: 'KMVY', name: "Martha's Vineyard" },
+  { code: 'KACK', name: 'Nantucket Memorial' },
+];
+
 /**
- * Fetch airport data from OurAirports or FAA database
- * For now, returns a mock implementation - should be replaced with actual data fetch
+ * Fetch airport data from FAA database via API
  * @param {string} icaoCode - ICAO airport code
- * @returns {Promise<object>} Airport data with {icao, lat, lon, elevation}
+ * @returns {Promise<object>} Airport data with {icao, name, lat, lon, elevation}
  */
 export async function getAirportData(icaoCode) {
-  // TODO: Replace with actual airport database fetch
-  // Options:
-  // 1. Bundle a local JSON file with airport data
-  // 2. Fetch from OurAirports CSV: https://ourairports.com/data/
-  // 3. Fetch from FAA airport database
+  const code = icaoCode.toUpperCase().trim();
   
-  // For now, return mock data for testing
-  // This should be replaced with actual implementation
-  const mockAirports = {
-    'KBOS': { icao: 'KBOS', lat: 42.3643, lon: -71.0052, elevation: 19 },
-    'KJFK': { icao: 'KJFK', lat: 40.6413, lon: -73.7781, elevation: 13 },
-    'KLGA': { icao: 'KLGA', lat: 40.7769, lon: -73.8740, elevation: 21 },
-    'KEWR': { icao: 'KEWR', lat: 40.6925, lon: -74.1687, elevation: 18 },
-    'KPHL': { icao: 'KPHL', lat: 39.8729, lon: -75.2437, elevation: 36 },
-    'KDCA': { icao: 'KDCA', lat: 38.8521, lon: -77.0377, elevation: 15 },
-  };
-
-  const airport = mockAirports[icaoCode.toUpperCase()];
-  if (!airport) {
-    throw new Error(`Airport ${icaoCode} not found in database`);
+  if (!code || code.length < 3 || code.length > 4) {
+    throw new Error('Invalid ICAO code. Must be 3-4 characters (e.g., KBOS, KJFK)');
   }
   
-  return airport;
+  const url = `https://jguz7puem3.execute-api.us-east-1.amazonaws.com/dev/weather/airport/?icao=${code}`;
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || `Airport ${code} not found`);
+    }
+    
+    return data;
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      throw error;
+    }
+    throw new Error(`Failed to fetch airport data for ${code}: ${error.message}`);
+  }
 }
 
 /**
- * Get list of all airports for autocomplete
+ * Get list of common airports for autocomplete
  * @returns {Promise<Array>} List of airport codes and names
  */
 export async function getAllAirports() {
-  // TODO: Return full airport list for autocomplete
-  // For now, return limited mock list
-  return [
-    { code: 'KBOS', name: 'Boston Logan International' },
-    { code: 'KJFK', name: 'New York JFK International' },
-    { code: 'KLGA', name: 'New York LaGuardia' },
-    { code: 'KEWR', name: 'Newark Liberty International' },
-    { code: 'KPHL', name: 'Philadelphia International' },
-    { code: 'KDCA', name: 'Washington Reagan National' },
-  ];
+  return COMMON_AIRPORTS;
 }
 
 /**
@@ -336,7 +340,7 @@ export async function fetchWindsAloft(region) {
   
   for (const fcst of [6, 12, 24]) {
     try {
-      const url = `https://aviationweather.gov/api/data/windtemp?region=${region}&fcst=${fcst}&level=low&format=raw`;
+      const url = `https://jguz7puem3.execute-api.us-east-1.amazonaws.com/dev/weather/winds-aloft?region=${region}&fcst=${fcst}`;
       const response = await fetch(url);
       const rawData = await response.text();
       const parsed = parseWindsAloft(rawData);
@@ -457,7 +461,7 @@ export function parseMetar(rawMetar) {
  */
 export async function fetchMetar(icaoCode) {
   try {
-    const url = `https://aviationweather.gov/api/data/metar?ids=${icaoCode}&format=raw`;
+    const url = `https://jguz7puem3.execute-api.us-east-1.amazonaws.com/dev/weather/metar?icao=${icaoCode}`;
     const response = await fetch(url);
     const rawData = await response.text();
     return parseMetar(rawData);
@@ -466,6 +470,21 @@ export async function fetchMetar(icaoCode) {
     // Return standard atmosphere as fallback
     return { altimeter: 29.92, tempC: 15 };
   }
+}
+
+/**
+ * Estimate temperature at altitude using ISA lapse rate from surface conditions
+ * ISA lapse rate is approximately 2°C per 1000 feet (1.98°C/1000ft)
+ * @param {number} surfaceTempC - Surface temperature in Celsius
+ * @param {number} surfaceElevationFt - Surface elevation in feet
+ * @param {number} altitudeFt - Target altitude in feet MSL
+ * @returns {number} Estimated temperature in Celsius
+ */
+export function estimateTemperatureAtAltitude(surfaceTempC, surfaceElevationFt, altitudeFt) {
+  const ISA_LAPSE_RATE_PER_1000FT = 2.0; // °C per 1000 feet
+  const altitudeAboveSurface = altitudeFt - surfaceElevationFt;
+  const tempDrop = (altitudeAboveSurface / 1000) * ISA_LAPSE_RATE_PER_1000FT;
+  return surfaceTempC - tempDrop;
 }
 
 /**
@@ -607,14 +626,27 @@ export function generateCandidateAltitudes(minAlt, maxAlt, magneticHeading, incl
   
   // Generate VFR altitudes if requested
   if (includeVFR) {
-    // VFR: 0-179° magnetic = odd thousands + 500, 180-359° = even thousands + 500
+    // VFR rules:
+    // - All altitudes up to 3000' are valid for any direction
+    // - 18,000' and above are NOT valid VFR altitudes
+    // - Between 3000' and 18,000': 0-179° magnetic = odd thousands + 500, 180-359° = even thousands + 500
     const useOdd = magneticHeading >= 0 && magneticHeading < 180;
     
     for (let alt = Math.ceil(minAlt / 1000) * 1000; alt <= maxAlt; alt += 1000) {
-      const isOdd = (alt / 1000) % 2 === 1;
-      if ((useOdd && isOdd) || (!useOdd && !isOdd)) {
-        const vfrAlt = alt + 500;
-        if (vfrAlt <= maxAlt) {
+      const vfrAlt = alt + 500;
+      
+      // Skip if above VFR ceiling or exceeds maxAlt
+      if (vfrAlt >= 18000 || vfrAlt > maxAlt) {
+        continue;
+      }
+      
+      // All altitudes up to 3000' are valid for any direction
+      if (vfrAlt <= 3000) {
+        vfr.push(vfrAlt);
+      } else {
+        // Standard VFR rules: odd/even based on heading
+        const isOdd = (alt / 1000) % 2 === 1;
+        if ((useOdd && isOdd) || (!useOdd && !isOdd)) {
           vfr.push(vfrAlt);
         }
       }
@@ -678,6 +710,10 @@ export async function calculateOptimalAltitude(params) {
     minAltitude, maxAltitude, magneticHeading, includeVFR
   );
   
+  // Get METAR data once for surface conditions (used for temp estimation)
+  const metar = await fetchMetar(departureIcao);
+  const surfaceElevation = depAirport.elevation || 0;
+  
   // Calculate groundspeed for each altitude
   const results = {
     theoretical: [],
@@ -701,14 +737,22 @@ export async function calculateOptimalAltitude(params) {
         const airportWinds = forecast.airports[nearestAirport] || {};
         const wind = interpolateWind(airportWinds, altitude);
         
-        // Get METAR data (use departure airport for now as proxy)
-        const metar = await fetchMetar(departureIcao);
+        // If winds aloft doesn't have temperature, estimate using ISA lapse rate
+        // from surface METAR temperature
+        let tempForCalculation = wind.temp;
+        let tempEstimated = false;
+        if (tempForCalculation === null) {
+          tempForCalculation = estimateTemperatureAtAltitude(
+            metar.tempC, surfaceElevation, altitude
+          );
+          tempEstimated = true;
+        }
         
-        // Calculate TAS
+        // Calculate TAS using the best available temperature
         const tas = iasToTas(
           indicatedAirspeed,
           altitude,
-          wind.temp !== null ? wind.temp : metar.tempC,
+          tempForCalculation,
           metar.altimeter
         );
         
@@ -722,7 +766,11 @@ export async function calculateOptimalAltitude(params) {
           lat: segment.lat,
           lon: segment.lon,
           nearestAirport,
-          wind,
+          wind: {
+            ...wind,
+            temp: tempForCalculation,
+            tempEstimated: tempEstimated
+          },
           tas,
           groundspeed: gs.groundspeed,
           windComponent: gs.windComponent

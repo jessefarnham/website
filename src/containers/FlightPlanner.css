@@ -131,6 +131,43 @@
   color: white;
 }
 
+.methodology {
+  text-align: left;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 25px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+}
+
+.methodology h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #007bff;
+}
+
+.methodology h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.methodology ul {
+  margin-bottom: 15px;
+  padding-left: 20px;
+}
+
+.methodology li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.methodology strong {
+  color: #495057;
+}
+
 @media (max-width: 768px) {
   .route-info dl,
   .altitude-recommendation dl {
@@ -143,5 +180,9 @@
   
   .computations table {
     font-size: 0.75em;
+  }
+  
+  .methodology {
+    padding: 15px;
   }
 }

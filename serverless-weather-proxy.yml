@@ -1,0 +1,76 @@
+service: website-weather-proxy
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 256
+  timeout: 30
+  
+  # IAM role statements (minimal permissions needed)
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+
+functions:
+  windsAloft:
+    handler: lambda/winds_aloft.handler
+    description: Proxy winds aloft data from aviationweather.gov
+    events:
+      - http:
+          path: weather/winds-aloft
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+    environment:
+      SERVICE_NAME: winds-aloft-proxy
+
+  metar:
+    handler: lambda/metar.handler
+    description: Proxy METAR data from aviationweather.gov
+    events:
+      - http:
+          path: weather/metar
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+    environment:
+      SERVICE_NAME: metar-proxy
+
+# Package settings
+package:
+  patterns:
+    - '!.git/**'
+    - '!.gitignore'
+    - '!node_modules/**'
+    - '!src/**'
+    - '!public/**'
+    - '!build/**'
+    - '!test-flight-planner.js'
+    - '!*.md'
+    - 'lambda/**'
+
+# Plugins (optional - uncomment if you want to use them)
+# plugins:
+#   - serverless-python-requirements

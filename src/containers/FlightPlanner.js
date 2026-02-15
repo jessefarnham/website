@@ -28,6 +28,7 @@ export default class FlightPlanner extends Component {
       airports: [],
       isCalculating: false,
       showComputations: false,
+      showMethodology: false,
       
       // Results
       results: null,
@@ -55,7 +56,12 @@ export default class FlightPlanner extends Component {
   
   handleInputChange = (field) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-    this.setState({ [field]: value, results: null, error: null });
+    // Don't clear results when toggling display options
+    if (field === 'showComputations' || field === 'showMethodology') {
+      this.setState({ [field]: value });
+    } else {
+      this.setState({ [field]: value, results: null, error: null });
+    }
   }
   
   isFormValid = () => {
@@ -224,6 +230,54 @@ export default class FlightPlanner extends Component {
     );
   }
   
+  renderMethodology() {
+    return (
+      <div className="methodology">
+        <h3>Methodology</h3>
+        
+        <h4>Data Sources</h4>
+        <ul>
+          <li><strong>Airport Data:</strong> FAA database via aviationweather.gov stations API, providing coordinates and field elevation.</li>
+          <li><strong>Winds Aloft:</strong> National Weather Service (NWS) FB winds aloft forecasts from aviationweather.gov, available for 6hr, 12hr, and 24hr forecast periods.</li>
+          <li><strong>Surface Weather:</strong> METAR observations from aviationweather.gov for current altimeter and temperature.</li>
+          <li><strong>Magnetic Declination:</strong> World Magnetic Model (WMM) via the geomag library.</li>
+        </ul>
+        
+        <h4>Navigation Calculations</h4>
+        <ul>
+          <li><strong>Distance:</strong> Great circle distance using the Haversine formula with Earth radius of 3,440.065 nm.</li>
+          <li><strong>Course:</strong> Initial true bearing calculated from departure to destination coordinates.</li>
+          <li><strong>Route Segmentation:</strong> Route is divided into segments (default 50nm) along the great circle path. Wind data is sampled at each segment waypoint.</li>
+          <li><strong>Magnetic Heading:</strong> True course adjusted for magnetic declination at the departure point.</li>
+        </ul>
+        
+        <h4>Atmospheric Model</h4>
+        <ul>
+          <li><strong>IAS to TAS Conversion:</strong> Uses International Standard Atmosphere (ISA) model. Pressure altitude is computed from indicated altitude and altimeter setting. Density ratio accounts for pressure and temperature effects.</li>
+          <li><strong>Temperature Estimation:</strong> When winds aloft data lacks temperature, surface temperature from METAR is extrapolated using ISA lapse rate of 2°C per 1,000 feet (indicated by * in results).</li>
+          <li><strong>Standard Conditions:</strong> ISA sea level: 288.15K (15°C), lapse rate: 6.5K/km in troposphere.</li>
+        </ul>
+        
+        <h4>Wind Triangle</h4>
+        <ul>
+          <li><strong>Groundspeed:</strong> Vector addition of aircraft velocity (TAS along course) and wind velocity.</li>
+          <li><strong>Wind Component:</strong> Headwind/tailwind component computed from angle between course and wind direction.</li>
+          <li><strong>Interpolation:</strong> Wind data is linearly interpolated between reported altitudes (3000, 6000, 9000, 12000ft, etc.).</li>
+        </ul>
+        
+        <h4>Assumptions &amp; Limitations</h4>
+        <ul>
+          <li>Wind data is taken from the nearest reporting station in the forecast; actual winds along route may vary.</li>
+          <li>Assumes constant indicated airspeed throughout the flight.</li>
+          <li>Does not account for terrain, airspace restrictions, or fuel considerations.</li>
+          <li>Assumes direct routing between airports (no intermediate waypoints).</li>
+          <li>Forecast validity is checked against departure time; flights extending beyond forecast period use the longest-range available forecast.</li>
+          <li>Results are estimates for planning purposes only. Always verify with official weather briefings.</li>
+        </ul>
+      </div>
+    );
+  }
+  
   renderComputations() {
     const { results } = this.state;
     const { optimal } = results;
@@ -253,7 +307,11 @@ export default class FlightPlanner extends Component {
                 <td>{seg.lat.toFixed(2)}°, {seg.lon.toFixed(2)}°</td>
                 <td>{seg.nearestAirport}</td>
                 <td>{seg.wind.direction.toFixed(0)}° @ {seg.wind.speed.toFixed(0)} kt</td>
-                <td>{seg.wind.temp !== null ? seg.wind.temp.toFixed(0) + '°C' : 'N/A'}</td>
+                <td>
+                  {seg.wind.temp !== null 
+                    ? seg.wind.temp.toFixed(0) + '°C' + (seg.wind.tempEstimated ? '*' : '')
+                    : 'N/A'}
+                </td>
                 <td>{seg.tas.toFixed(1)} kt</td>
                 <td>{seg.groundspeed.toFixed(1)} kt</td>
                 <td>{this.formatWindComponent(seg.windComponent)}</td>
@@ -261,6 +319,9 @@ export default class FlightPlanner extends Component {
             ))}
           </tbody>
         </Table>
+        <p className="text-muted" style={{fontSize: '0.85em', marginTop: '0.5em'}}>
+          * Temperature estimated from surface METAR using ISA lapse rate (2°C/1000ft)
+        </p>
       </div>
     );
   }
@@ -268,13 +329,23 @@ export default class FlightPlanner extends Component {
   render() {
     const { departureAirport, destinationAirport, indicatedAirspeed, departureDateTime,
             minAltitude, maxAltitude, resolutionNM, vfrAltitudes, airports, 
-            isCalculating, showComputations, results, error } = this.state;
+            isCalculating, showComputations, showMethodology, results, error } = this.state;
     
     return (
       <div className="FlightPlanner">
         <div className="lander">
           <h1>Flight Planner</h1>
           <p>Plan your optimal altitude based on winds aloft forecasts</p>
+          <p>
+            <button 
+              type="button" 
+              className="btn btn-link p-0"
+              onClick={() => this.setState({ showMethodology: !showMethodology })}
+            >
+              {showMethodology ? 'Hide Methodology' : 'Methodology'}
+            </button>
+          </p>
+          {showMethodology && this.renderMethodology()}
         </div>
         
         <div className="planner-form">
