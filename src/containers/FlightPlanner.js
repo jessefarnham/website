@@ -7,13 +7,13 @@ import { getLastModified } from '../lastModified';
 export default class FlightPlanner extends Component {
   constructor(props) {
     super(props);
-    
+
     const now = new Date();
     // Round to next hour
     now.setHours(now.getHours() + 1);
     now.setMinutes(0);
     now.setSeconds(0);
-    
+
     this.state = {
       // Input fields
       departureAirport: '',
@@ -24,28 +24,28 @@ export default class FlightPlanner extends Component {
       maxAltitude: 10000,
       resolutionNM: 50,
       vfrAltitudes: true,
-      
+
       // UI state
       isCalculating: false,
       showComputations: false,
       showMethodology: false,
-      
+
       // Airport search state
       departureSuggestions: [],
       destinationSuggestions: [],
       showDepartureSuggestions: false,
       showDestinationSuggestions: false,
-      
+
       // Results
       results: null,
       error: null
     };
-    
+
     // Debounce timers
     this.departureSearchTimer = null;
     this.destinationSearchTimer = null;
   }
-  
+
   formatDateTimeLocal(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -54,7 +54,7 @@ export default class FlightPlanner extends Component {
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   }
-  
+
   handleInputChange = (field) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     // Don't clear results when toggling display options
@@ -64,40 +64,40 @@ export default class FlightPlanner extends Component {
       this.setState({ [field]: value, results: null, error: null });
     }
   }
-  
+
   handleAirportSearch = (field, suggestionsField, showField) => (event) => {
     const value = event.target.value.toUpperCase();
     this.setState({ [field]: value, results: null, error: null });
-    
+
     // Clear existing timer
     const timerField = field === 'departureAirport' ? 'departureSearchTimer' : 'destinationSearchTimer';
     if (this[timerField]) {
       clearTimeout(this[timerField]);
     }
-    
+
     // Hide suggestions if input is too short
     if (value.length < 2) {
       this.setState({ [suggestionsField]: [], [showField]: false });
       return;
     }
-    
+
     // Debounce the search
     this[timerField] = setTimeout(async () => {
       const results = await searchAirports(value);
       if (results && results.length > 0) {
-        this.setState({ 
+        this.setState({
           [suggestionsField]: results,
           [showField]: true
         });
       } else {
-        this.setState({ 
+        this.setState({
           [suggestionsField]: [],
           [showField]: false
         });
       }
     }, 300);
   }
-  
+
   selectAirport = (field, suggestionsField, showField, code) => {
     this.setState({
       [field]: code,
@@ -107,39 +107,39 @@ export default class FlightPlanner extends Component {
       error: null
     });
   }
-  
+
   hideSuggestions = (showField) => () => {
     // Delay hiding to allow click to register
     setTimeout(() => {
       this.setState({ [showField]: false });
     }, 200);
   }
-  
+
   isFormValid = () => {
-    const { departureAirport, destinationAirport, indicatedAirspeed, 
+    const { departureAirport, destinationAirport, indicatedAirspeed,
             departureDateTime, minAltitude, maxAltitude } = this.state;
-    
-    return departureAirport && 
-           destinationAirport && 
-           indicatedAirspeed > 0 && 
+
+    return departureAirport &&
+           destinationAirport &&
+           indicatedAirspeed > 0 &&
            departureDateTime &&
            minAltitude < maxAltitude;
   }
-  
+
   handlePlan = async () => {
     if (!this.isFormValid()) {
       this.setState({ error: 'Please fill in all required fields correctly' });
       return;
     }
-    
+
     const { departureAirport, destinationAirport, indicatedAirspeed,
             departureDateTime, minAltitude, maxAltitude, resolutionNM, vfrAltitudes } = this.state;
-    
+
     this.setState({ isCalculating: true, error: null, results: null });
-    
+
     try {
       const departureTime = new Date(departureDateTime);
-      
+
       const results = await calculateOptimalAltitude({
         departureIcao: departureAirport,
         destinationIcao: destinationAirport,
@@ -150,23 +150,23 @@ export default class FlightPlanner extends Component {
         resolutionNM: parseFloat(resolutionNM),
         includeVFR: vfrAltitudes
       });
-      
+
       this.setState({ results, isCalculating: false });
     } catch (error) {
       console.error('Flight planning error:', error);
-      this.setState({ 
+      this.setState({
         error: `Error calculating flight plan: ${error.message}`,
-        isCalculating: false 
+        isCalculating: false
       });
     }
   }
-  
+
   formatTime(hours) {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h ${m}m`;
   }
-  
+
   formatWindComponent(component) {
     if (component > 0) {
       return `${component.toFixed(1)} kt tailwind`;
@@ -176,18 +176,18 @@ export default class FlightPlanner extends Component {
       return '0 kt (crosswind)';
     }
   }
-  
+
   renderResults() {
     const { results, showComputations } = this.state;
-    
+
     if (!results) return null;
-    
+
     const { route, forecast, optimal, allResults } = results;
-    
+
     return (
       <div className="results">
         <h2>Flight Plan Results</h2>
-        
+
         {/* Route Information */}
         <div className="route-info">
           <h3>Route Information</h3>
@@ -200,21 +200,21 @@ export default class FlightPlanner extends Component {
             <dd>{route.magneticHeading.toFixed(0)}° (declination: {route.magDeclination.toFixed(1)}°)</dd>
           </dl>
         </div>
-        
+
         {/* Forecast Information */}
         {forecast.warning && (
           <Alert variant="warning">{forecast.warning}</Alert>
         )}
-        
+
         <div className="forecast-info">
           <h3>Forecast</h3>
           <p>Region: {forecast.region.toUpperCase()}, Valid: {forecast.validTime}, Use: {forecast.useFrom}-{forecast.useTo}Z</p>
         </div>
-        
+
         {/* Optimal Altitudes */}
         <div className="optimal-altitudes">
           <h3>Recommended Altitudes</h3>
-          
+
           <div className="altitude-recommendation">
             <h4>Theoretical Optimal</h4>
             <p className="altitude-value">{optimal.theoretical.altitude} feet MSL</p>
@@ -225,7 +225,7 @@ export default class FlightPlanner extends Component {
               <dd>{this.formatTime(optimal.theoretical.estimatedTime)}</dd>
             </dl>
           </div>
-          
+
           {optimal.vfr && (
             <div className="altitude-recommendation">
               <h4>VFR-Compliant Optimal</h4>
@@ -239,7 +239,7 @@ export default class FlightPlanner extends Component {
             </div>
           )}
         </div>
-        
+
         {/* Comparison Table */}
         <div className="altitude-comparison">
           <h3>All Candidate Altitudes</h3>
@@ -254,7 +254,7 @@ export default class FlightPlanner extends Component {
             </thead>
             <tbody>
               {allResults.theoretical.map(result => (
-                <tr key={`theo-${result.altitude}`} 
+                <tr key={`theo-${result.altitude}`}
                     className={result.altitude === optimal.theoretical.altitude ? 'optimal' : ''}>
                   <td>{result.altitude}</td>
                   <td>{result.avgGroundspeed.toFixed(1)}</td>
@@ -274,18 +274,18 @@ export default class FlightPlanner extends Component {
             </tbody>
           </Table>
         </div>
-        
+
         {/* Detailed Computations */}
         {showComputations && this.renderComputations()}
       </div>
     );
   }
-  
+
   renderMethodology() {
     return (
       <div className="methodology">
         <h3>Methodology</h3>
-        
+
         <h4>Data Sources</h4>
         <ul>
           <li><strong>Airport Data:</strong> Coordinates and field elevation from aviationweather.gov stations API. Airport search uses OurAirports open data.</li>
@@ -293,7 +293,7 @@ export default class FlightPlanner extends Component {
           <li><strong>Surface Weather:</strong> METAR observations from aviationweather.gov for current altimeter and temperature.</li>
           <li><strong>Magnetic Declination:</strong> World Magnetic Model (WMM) via the geomag library.</li>
         </ul>
-        
+
         <h4>Navigation Calculations</h4>
         <ul>
           <li><strong>Distance:</strong> Great circle distance using the Haversine formula with Earth radius of 3,440.065 nm.</li>
@@ -301,21 +301,21 @@ export default class FlightPlanner extends Component {
           <li><strong>Route Segmentation:</strong> Route is divided into segments (default 50nm) along the great circle path. Wind data is sampled at each segment waypoint.</li>
           <li><strong>Magnetic Heading:</strong> True course adjusted for magnetic declination at the departure point.</li>
         </ul>
-        
+
         <h4>Atmospheric Model</h4>
         <ul>
           <li><strong>IAS to TAS Conversion:</strong> Uses International Standard Atmosphere (ISA) model. Pressure altitude is computed from indicated altitude and altimeter setting. Density ratio accounts for pressure and temperature effects.</li>
           <li><strong>Temperature Estimation:</strong> When winds aloft data lacks temperature, surface temperature from METAR is extrapolated using ISA lapse rate of 2°C per 1,000 feet (indicated by * in results).</li>
           <li><strong>Standard Conditions:</strong> ISA sea level: 288.15K (15°C), lapse rate: 6.5K/km in troposphere.</li>
         </ul>
-        
+
         <h4>Wind Triangle</h4>
         <ul>
           <li><strong>Groundspeed:</strong> Vector addition of aircraft velocity (TAS along course) and wind velocity.</li>
           <li><strong>Wind Component:</strong> Headwind/tailwind component computed from angle between course and wind direction.</li>
           <li><strong>Interpolation:</strong> Wind data is linearly interpolated between reported altitudes (3000, 6000, 9000, 12000ft, etc.).</li>
         </ul>
-        
+
         <h4>Assumptions &amp; Limitations</h4>
         <ul>
           <li>Wind data is sampled from the nearest reporting station at each route segment; actual winds may vary between stations.</li>
@@ -328,16 +328,16 @@ export default class FlightPlanner extends Component {
       </div>
     );
   }
-  
+
   renderComputations() {
     const { results } = this.state;
     const { optimal } = results;
-    
+
     return (
       <div className="computations">
         <h3>Detailed Computations (Theoretical Optimal)</h3>
         <p>Showing calculations for {optimal.theoretical.altitude} ft MSL</p>
-        
+
         <Table striped bordered size="sm">
           <thead>
             <tr>
@@ -359,7 +359,7 @@ export default class FlightPlanner extends Component {
                 <td>{seg.nearestAirport}</td>
                 <td>{seg.wind.direction.toFixed(0)}° @ {seg.wind.speed.toFixed(0)} kt</td>
                 <td>
-                  {seg.wind.temp !== null 
+                  {seg.wind.temp !== null
                     ? seg.wind.temp.toFixed(0) + '°C' + (seg.wind.tempEstimated ? '*' : '')
                     : 'N/A'}
                 </td>
@@ -378,22 +378,22 @@ export default class FlightPlanner extends Component {
       </div>
     );
   }
-  
+
   render() {
     const { departureAirport, destinationAirport, indicatedAirspeed, departureDateTime,
             minAltitude, maxAltitude, resolutionNM, vfrAltitudes,
             departureSuggestions, destinationSuggestions,
             showDepartureSuggestions, showDestinationSuggestions,
             isCalculating, showComputations, showMethodology, results, error } = this.state;
-    
+
     return (
       <div className="FlightPlanner">
         <div className="lander">
           <h1>Flight Planner</h1>
           <p>Plan your optimal altitude based on winds aloft forecasts</p>
           <p>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="btn btn-link p-0"
               onClick={() => this.setState({ showMethodology: !showMethodology })}
             >
@@ -402,12 +402,12 @@ export default class FlightPlanner extends Component {
           </p>
           {showMethodology && this.renderMethodology()}
         </div>
-        
+
         <div className="planner-form">
           <Form>
             <Form.Group controlId="departureAirport" className="airport-autocomplete">
               <Form.Label>Departure Airport (ICAO)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="text"
                 value={departureAirport}
                 onChange={this.handleAirportSearch('departureAirport', 'departureSuggestions', 'showDepartureSuggestions')}
@@ -418,7 +418,7 @@ export default class FlightPlanner extends Component {
               {showDepartureSuggestions && departureSuggestions.length > 0 && (
                 <ul className="airport-suggestions">
                   {departureSuggestions.map(airport => (
-                    <li 
+                    <li
                       key={airport.code}
                       onMouseDown={() => this.selectAirport('departureAirport', 'departureSuggestions', 'showDepartureSuggestions', airport.code)}
                     >
@@ -428,10 +428,10 @@ export default class FlightPlanner extends Component {
                 </ul>
               )}
             </Form.Group>
-            
+
             <Form.Group controlId="destinationAirport" className="airport-autocomplete">
               <Form.Label>Destination Airport (ICAO)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="text"
                 value={destinationAirport}
                 onChange={this.handleAirportSearch('destinationAirport', 'destinationSuggestions', 'showDestinationSuggestions')}
@@ -442,7 +442,7 @@ export default class FlightPlanner extends Component {
               {showDestinationSuggestions && destinationSuggestions.length > 0 && (
                 <ul className="airport-suggestions">
                   {destinationSuggestions.map(airport => (
-                    <li 
+                    <li
                       key={airport.code}
                       onMouseDown={() => this.selectAirport('destinationAirport', 'destinationSuggestions', 'showDestinationSuggestions', airport.code)}
                     >
@@ -452,10 +452,10 @@ export default class FlightPlanner extends Component {
                 </ul>
               )}
             </Form.Group>
-            
+
             <Form.Group controlId="indicatedAirspeed">
               <Form.Label>Expected Indicated Airspeed (knots)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="number"
                 value={indicatedAirspeed}
                 onChange={this.handleInputChange('indicatedAirspeed')}
@@ -463,19 +463,19 @@ export default class FlightPlanner extends Component {
                 max="250"
               />
             </Form.Group>
-            
+
             <Form.Group controlId="departureDateTime">
               <Form.Label>Departure Date & Time (Local)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="datetime-local"
                 value={departureDateTime}
                 onChange={this.handleInputChange('departureDateTime')}
               />
             </Form.Group>
-            
+
             <Form.Group controlId="minAltitude">
               <Form.Label>Minimum Altitude (feet MSL)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="number"
                 value={minAltitude}
                 onChange={this.handleInputChange('minAltitude')}
@@ -484,10 +484,10 @@ export default class FlightPlanner extends Component {
                 step="500"
               />
             </Form.Group>
-            
+
             <Form.Group controlId="maxAltitude">
               <Form.Label>Maximum Altitude (feet MSL)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="number"
                 value={maxAltitude}
                 onChange={this.handleInputChange('maxAltitude')}
@@ -496,10 +496,10 @@ export default class FlightPlanner extends Component {
                 step="500"
               />
             </Form.Group>
-            
+
             <Form.Group controlId="resolutionNM">
               <Form.Label>Resolution (nautical miles)</Form.Label>
-              <Form.Control 
+              <Form.Control
                 type="number"
                 value={resolutionNM}
                 onChange={this.handleInputChange('resolutionNM')}
@@ -511,18 +511,19 @@ export default class FlightPlanner extends Component {
                 Distance between route segments for wind sampling
               </Form.Text>
             </Form.Group>
-            
+
             <Form.Group controlId="vfrAltitudes">
-              <Form.Check 
+              <Form.Check
                 type="checkbox"
                 label="Calculate VFR-compliant altitudes"
                 checked={vfrAltitudes}
                 onChange={this.handleInputChange('vfrAltitudes')}
               />
             </Form.Group>
-            
-            <Button 
-              variant="primary" 
+
+            <Button
+              type="button"
+              variant="primary"
               onClick={this.handlePlan}
               disabled={!this.isFormValid() || isCalculating}
               block
@@ -536,18 +537,18 @@ export default class FlightPlanner extends Component {
               )}
             </Button>
           </Form>
-          
+
           {error && (
             <Alert variant="danger" className="mt-3">
               {error}
             </Alert>
           )}
         </div>
-        
+
         {results && (
           <>
             <div className="show-computations">
-              <Form.Check 
+              <Form.Check
                 type="checkbox"
                 label="Show detailed computations"
                 checked={showComputations}
