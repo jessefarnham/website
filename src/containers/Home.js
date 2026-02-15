@@ -1,6 +1,7 @@
 import React from 'react'
 import "./Home.css"
 import FireflyInPA from './fireflyInPA.jpg';
+import { getLastModified } from '../lastModified';
 
 export default function Home() {
     return (
@@ -60,7 +61,7 @@ export default function Home() {
                  className="img-fluid"/>
                 <hr/>
                 <footer>
-                This site was last modified on November 7, 2025.
+                This page was last modified on {getLastModified('Home')}.
                 </footer>
             </div>
         </div>

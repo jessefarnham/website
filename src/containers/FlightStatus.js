@@ -4,6 +4,7 @@ import MapContainer from '../components/Map';
 import './FlightStatus.css';
 import Config from '../config';
 import FireflyInPA from './fireflyInPA.jpg';
+import { getLastModified } from '../lastModified';
 
 const updateIntervalSeconds = 60;
 
@@ -11,19 +12,24 @@ export default class FlightStatus extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {time: null, flightStatus: null};
+        this.state = {time: null, flightStatus: null, error: null};
         this.loadStatus = this.loadStatus.bind(this);
         this.loadStatus()
     }
 
     async loadStatus() {
-        let flightStatus = await get({ apiName: 'flight-info', path: '/flightinfo/active' }).response.then(r => r.body.json());
-        let lastTrackStatus = null;
-        if (!flightStatus.isFlying) {
-            lastTrackStatus = await get({ apiName: 'flight-info', path: '/flightinfo/lasttrack' }).response.then(r => r.body.json());
+        try {
+            let flightStatus = await get({ apiName: 'flight-info', path: '/flightinfo/active' }).response.then(r => r.body.json());
+            let lastTrackStatus = null;
+            if (!flightStatus.isFlying) {
+                lastTrackStatus = await get({ apiName: 'flight-info', path: '/flightinfo/lasttrack' }).response.then(r => r.body.json());
+            }
+            this.setState({time: new Date(), flightStatus: flightStatus,
+                                 lastTrackStatus: lastTrackStatus, error: null});
+        } catch (error) {
+            console.error('Failed to load flight status:', error);
+            this.setState({ error: error.message || 'Failed to load flight status' });
         }
-        this.setState({time: new Date(), flightStatus: flightStatus,
-                             lastTrackStatus: lastTrackStatus})
     }
 
     componentDidMount(){
@@ -111,20 +117,30 @@ export default class FlightStatus extends Component {
     }
 
     render() {
+        const { time, error } = this.state;
+        
+        let content;
+        if (error) {
+            content = <p className="error">Error loading flight status: {error}</p>;
+        } else if (time) {
+            content = this.renderFlightInfo();
+        } else {
+            content = <p>Loading, please wait...</p>;
+        }
+        
         return (
             <div className='FlightStatus'>
                 <div className='lander'>
                     <h1>Flight Status</h1>
-                    <p>
-                        {this.state.time ? this.renderFlightInfo() : 'Loading, please wait...'}
-                    </p>
+                    {content}
                 </div>
                 <div className={'map'}>
-                    {this.state.time && this.renderMap()}
+                    {time && !error && this.renderMap()}
                 </div>
-            {/*<div className={'fireflyImg'}>
-                    {this.state.time && this.renderFireflyImg()}
-                </div>*/}
+                <hr/>
+                <footer>
+                This page was last modified on {getLastModified('FlightStatus')}.
+                </footer>
             </div>
         )
     }

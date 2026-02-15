@@ -13,3 +13,8 @@
 .ReadingList .lander ul {
     color: #999;
 }
+
+.ReadingList .lander footer {
+    color: #999;
+    font-style: italic;
+}

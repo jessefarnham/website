@@ -9,13 +9,12 @@ import { Amplify } from 'aws-amplify';
 
 Amplify.configure({
     API: {
-        endpoints: [
-            {
-                name: 'flight-info',
+        REST: {
+            'flight-info': {
                 endpoint: Config.apiGateway.URL,
                 region: Config.apiGateway.REGION
             }
-        ]
+        }
     }
 });
 

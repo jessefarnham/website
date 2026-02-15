@@ -9,7 +9,7 @@ This is a personal website for Jesse Farnham built with Create React App. The si
 - A flight status tracker that displays real-time location data for a Cessna 140 aircraft
 - Contact and reading list pages
 
-The application integrates with AWS services (AWS Amplify and API Gateway) to fetch flight tracking data from FlightAware and displays it on an interactive Google Maps interface.
+The application integrates with AWS services (AWS Amplify and API Gateway) to fetch flight tracking data from FlightAware and displays it on an interactive map using Leaflet with OpenStreetMap tiles.
 
 ## Development Commands
 
@@ -47,7 +47,7 @@ Creates an optimized production build in the `build/` directory.
   - `ReadingList.js` - Engineering reading list
   - `NotFound.js` - 404 handler
 - **components/**: Reusable UI components
-  - `Map.js` - Google Maps integration using google-maps-react; displays either current position with directional marker or last flight path as polyline
+  - `Map.js` - Leaflet/OpenStreetMap integration using react-leaflet; displays either current position with directional marker or last flight path as polyline
 
 ### Data Flow for Flight Tracking
 1. `FlightStatus` component mounts and calls `loadStatus()` immediately
@@ -58,12 +58,8 @@ Creates an optimized production build in the `build/` directory.
 
 ### External Service Integration
 - **AWS Amplify**: Configured to use API Gateway endpoint at `https://jguz7puem3.execute-api.us-east-1.amazonaws.com/dev`
-- **Google Maps API**: Requires `REACT_APP_GOOGLE_API_KEY` environment variable
+- **OpenStreetMap**: Free map tiles via Leaflet, no API key required
 - **FlightAware**: Backend API integration (not visible in frontend code)
-
-## Environment Variables
-
-- `REACT_APP_GOOGLE_API_KEY`: Required for Google Maps functionality in `components/Map.js`
 
 ## Key Dependencies
 
@@ -71,7 +67,7 @@ Creates an optimized production build in the `build/` directory.
 - `react-router-dom`: Client-side routing
 - `react-bootstrap`: UI components (using v1.0.0-beta.16)
 - `aws-amplify`: AWS service integration for API calls
-- `google-maps-react`: Google Maps integration
+- `leaflet` & `react-leaflet`: Map display with OpenStreetMap tiles
 
 ## Important Notes
 
