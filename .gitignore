@@ -21,3 +21,6 @@ state.json
 auth.yml
 auth.sh
 .DS_store
+
+# Auto-generated at build time
+src/lastModified.js

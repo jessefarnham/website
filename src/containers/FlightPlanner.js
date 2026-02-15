@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Form, Button, Alert, Table, Spinner } from 'react-bootstrap';
 import { calculateOptimalAltitude, searchAirports } from '../lib/flightPlanner';
 import './FlightPlanner.css';
+import { getLastModified } from '../lastModified';
 
 export default class FlightPlanner extends Component {
   constructor(props) {
@@ -556,6 +557,10 @@ export default class FlightPlanner extends Component {
             {this.renderResults()}
           </>
         )}
+        <hr/>
+        <footer>
+        This page was last modified on {getLastModified('FlightPlanner')}.
+        </footer>
       </div>
     );
   }

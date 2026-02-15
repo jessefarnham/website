@@ -10,17 +10,17 @@ function App(props) {
     <div className="App Container">
         <Navbar fluid collapseOnSelect>
           <Link to='/'>Home</Link>
+            <LinkContainer to='/flightplanner'>
+                <Nav.Link>Flight Planner</Nav.Link>
+            </LinkContainer>
             <LinkContainer to='/flightstatus'>
                 <Nav.Link>Flight Status</Nav.Link>
-            </LinkContainer>
-            <LinkContainer to='/contact'>
-                <Nav.Link>Contact</Nav.Link>
             </LinkContainer>
             <LinkContainer to='/readinglist'>
                 <Nav.Link>Engineering Reading List</Nav.Link>
             </LinkContainer>
-            <LinkContainer to='/flightplanner'>
-                <Nav.Link>Flight Planner</Nav.Link>
+            <LinkContainer to='/contact'>
+                <Nav.Link>Contact</Nav.Link>
             </LinkContainer>
         </Navbar>
         <Routes />

@@ -1,6 +1,7 @@
 import React from 'react'
 import "./Contact.css"
 import Resume from "./jesse_farnham_resume.pdf"
+import { getLastModified } from '../lastModified';
 
 export default function Home() {
     return (
@@ -24,6 +25,10 @@ export default function Home() {
                     <li><a href="https://wesscholar.wesleyan.edu/etd_hon_theses/97/">
                         My senior thesis</a></li>
                 </ul>
+                <hr/>
+                <footer>
+                This page was last modified on {getLastModified('Contact')}.
+                </footer>
             </div>
         </div>
     )

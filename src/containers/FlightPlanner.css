@@ -209,6 +209,11 @@
   color: #495057;
 }
 
+.FlightPlanner footer {
+  color: #999;
+  font-style: italic;
+}
+
 @media (max-width: 768px) {
   .route-info dl,
   .altitude-recommendation dl {
