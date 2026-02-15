@@ -3,6 +3,10 @@
     publish = "build"
     command = "npm run build"
 
+[build.environment]
+    NODE_VERSION = "18"
+    NODE_OPTIONS = "--openssl-legacy-provider"
+
 [[redirects]]
     from = "/*"
     to = "/index.html"
